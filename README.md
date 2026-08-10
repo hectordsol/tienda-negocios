@@ -45,10 +45,11 @@
 tienda-negocios/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/
-│   │   │   └── ProductoController.php
-│   │   └── Routes/
-│   │         ├── api.php
+│   │   └── Controllers/
+│   │       ├── CarritoController.php
+│   │       ├── CategoriaController.php
+│   │       ├── ProductoController.php
+│   │       └── ProductoController.php
 │   └── Models/
 │       ├── Carrito.php
 │       ├── Categoria.php
@@ -61,6 +62,10 @@ tienda-negocios/
 │   │   ├── [timestamp]_create_categorias_table.php
 │   │   └── [timestamp]_create_carritos_table.php
 │   └── seeders/
+│       ├── CategoriaSeeder.php
+│       ├── DatabaseSeeder.php
+│       ├── ProductoSeeder.php
+│       └── UsuarioSeeder.php
 ├── resources/
 │   └── views/
 ├── routes/
