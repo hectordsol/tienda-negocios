@@ -2,7 +2,7 @@
 
 ## 📋 Descripción del Proyecto
 
-**Tienda de Negocios** es una aplicación web desarrollada con Laravel que permite gestionar productos de una tienda. El sistema proporciona funcionalidades básicas para administrar el inventario de productos de manera eficiente.
+**Tienda de Negocios** es una aplicación web desarrollada con Laravel que permite gestionar productos de una tienda. El sistema proporciona funcionalidades básicas para administrar el inventario de productos.
 
 ## 🚀 Estado Actual del Proyecto
 
@@ -10,15 +10,16 @@
 - [x] Configuración del sistema de rutas
 - [x] Conexión a base de datos MySQL
 - [x] Controlador de Productos
-- [x] Modelo Producto
-- [x] Migración de la tabla Productos
+- [x] Modelo Producto, Usuario, Categoría, Carrito
+- [x] Migración de la tablas Usuario, Producto, Categoria, Carrito, 
 
 ### 🔄 Próximos Pasos
-- [ ] Implementación de CRUD completo
-- [ ] Vistas para gestión de productos
+- [ ] Implementación de CRUD completo Producto y Categorías
+- [ ] Vistas para gestión de productos con rutas (routes/web.php)
 - [ ] Validaciones de formularios
-- [ ] Autenticación de usuarios
-- [ ] Sistema de categorías
+- [ ] Validar datos
+- [ ] Incluir regla personalizada
+- [ ] Analizar y documentar flujo de información Laravel
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -44,16 +45,23 @@ tienda-negocios/
 │   │   ├── Controllers/
 │   │   │   └── ProductoController.php
 │   │   └── Routes/
-│   │       └── web.php
+│   │         ├── api.php
 │   └── Models/
-│       └── Producto.php
+│       ├── Carrito.php
+│       ├── Categoria.php
+│       ├── Producto.php
+│       └── Usuario.php
 ├── database/
 │   ├── migrations/
-│   │   └── [timestamp]_create_productos_table.php
+│   │   ├── [timestamp]_create_usuarios_table.php
+│   │   ├── [timestamp]_create_productos_table.php
+│   │   ├── [timestamp]_create_categorias_table.php
+│   │   └── [timestamp]_create_carritos_table.php
 │   └── seeders/
 ├── resources/
 │   └── views/
 ├── routes/
+│   ├── api.php
 │   └── web.php
 └── ...
 ```
