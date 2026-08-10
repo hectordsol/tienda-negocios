@@ -39,21 +39,37 @@
 
 tienda-negocios/
 ├── app/
+
 │   ├── Http/
+
 │   │   ├── Controllers/
+
 │   │   │   └── ProductoController.php
+
 │   │   └── Routes/
+
 │   │       └── web.php
+
 │   └── Models/
+
 │       └── Producto.php
+
 ├── database/
+
 │   ├── migrations/
+
 │   │   └── [timestamp]_create_productos_table.php
+
 │   └── seeders/
+
 ├── resources/
+
 │   └── views/
+
 ├── routes/
+
 │   └── web.php
+
 └── ...
 
 ## 🔧 Configuración del Entorno
