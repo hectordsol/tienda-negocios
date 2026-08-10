@@ -2,17 +2,16 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductoController;
 
-Route::get('/user', function (Request $request) {
+Route::get('/usuarios', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
 Route::prefix('v1')->group(function () {
-    Route::get('/productos', [ProductController::class, 'index']
+    Route::get('/productos', [ProductoController::class, 'index']
     )->name('api.productos.v1');
 
-    Route::get('/productos/{id}', [ProductController::class, 'show']
+    Route::get('/productos/{id}', [ProductoController::class, 'show']
     )->name('api.productos.show');
-
-    });
+});
