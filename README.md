@@ -35,7 +35,8 @@
 - XAMPP o similar
 - Node.js y npm (opcional para assets)
 
-📂 Estructura del Proyecto
+## 📂 Estructura del Proyecto
+
 tienda-negocios/
 ├── app/
 │   ├── Http/
@@ -64,6 +65,13 @@ cd tienda-negocios
 
 ### 2. Configuración de base de datos para probar
 .env para probar
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=tienda_negocios
+DB_USERNAME=root
+DB_PASSWORD=
 
 👨‍💻 Desarrollador
 Nombre del desarrollador - [Héctor Darío Sol]
