@@ -37,41 +37,26 @@
 
 ## 📂 Estructura del Proyecto
 
+```text
 tienda-negocios/
 ├── app/
-
 │   ├── Http/
-
 │   │   ├── Controllers/
-
 │   │   │   └── ProductoController.php
-
 │   │   └── Routes/
-
 │   │       └── web.php
-
 │   └── Models/
-
 │       └── Producto.php
-
 ├── database/
-
 │   ├── migrations/
-
 │   │   └── [timestamp]_create_productos_table.php
-
 │   └── seeders/
-
 ├── resources/
-
 │   └── views/
-
 ├── routes/
-
 │   └── web.php
-
 └── ...
-
+```
 ## 🔧 Configuración del Entorno
 
 ### 1. Clonar el repositorio
@@ -89,6 +74,6 @@ DB_DATABASE=tienda_negocios
 DB_USERNAME=root
 DB_PASSWORD=
 
-👨‍💻 Desarrollador
+## 👨‍💻 Desarrollador
 Nombre del desarrollador - [Héctor Darío Sol]
 
