@@ -11,7 +11,9 @@
 - [x] Conexión a base de datos MySQL
 - [x] Controlador de Productos
 - [x] Modelo Producto, Usuario, Categoría, Carrito
-- [x] Migración de la tablas Usuario, Producto, Categoria, Carrito, 
+- [x] Migración de la tablas Usuario, Producto, Categoria, Carrito.
+- [x] Definir Relaciones en los modelos
+
 
 ### 🔄 Próximos Pasos
 - [ ] Implementación de CRUD completo Producto y Categorías
