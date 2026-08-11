@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreProductoRequest extends FormRequest
+class UpdateProductoRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,12 +22,14 @@ class StoreProductoRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'nombre' => 'required|string|max:255',
+        return [//sometimes se utiliza para indicar que el campo es opcional,
+                // pero si se proporciona, debe cumplir con las reglas de validación
+                // especificadas para eso necesita que esté required también.
+            'nombre' => 'sometimes|required|string|max:255',
             'descripcion' => 'nullable|string',
-            'precio' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'categoria_id' => 'required|exists:categorias,id',
+            'precio' => 'sometimes|required|numeric|min:0',
+            'stock' => 'sometimes|required|integer|min:0',
+            'categoria_id' => 'sometimes|required|exists:categorias,id',
         ];
     }
     public function messages(): array

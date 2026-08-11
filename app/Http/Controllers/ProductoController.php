@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Producto;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreProductoRequest;
+use App\Http\Requests\UpdateProductoRequest;
 
 class ProductoController extends Controller
 {
@@ -43,19 +44,24 @@ class ProductoController extends Controller
             return response()->json(['message' => 'Producto no encontrado'], 404);
         }
     }
-    public function update(StoreProductoRequest $request, $id)
+    public function update(UpdateProductoRequest $request, Producto $producto)
     {
-        $producto = Producto::find($id);
+        $validateData = $request->validated();
 
-        if ($producto) {
-            $validatedData = $request->validated();
+        $producto->update($validateData);
 
-            $producto->update($validatedData);
+        return response()->json($producto); 
+    //     $producto = Producto::find($id);
 
-            return response()->json($producto);
-        } else {
-            return response()->json(['message' => 'Producto no encontrado'], 404);
-        }
+    //     if ($producto) {
+    //         $validatedData = $request->validated();
+
+    //         $producto->update($validatedData);
+
+    //         return response()->json($producto);
+    //     } else {
+    //         return response()->json(['message' => 'Producto no encontrado'], 404);
+    //     }
     }
     public function destroy($id)
     {
