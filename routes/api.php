@@ -26,7 +26,7 @@ Route::delete('/categorias/{id}', [CategoriaController::class, 'destroy']);
  Route::get('/productos', [ProductoController::class, 'index']);
  Route::get('/productos/{id}', [ProductoController::class, 'show']);
  Route::post('/productos/', [ProductoController::class, 'store']);
- Route::put('/productos/{id}', [ProductoController::class, 'update']);
+ Route::put('/productos/{producto}', [ProductoController::class, 'update']);
  Route::delete('/productos/{id}', [ProductoController::class, 'destroy']);
 
  Route::get('/carrito', [CarritoController::class, 'index']);

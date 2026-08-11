@@ -13,6 +13,13 @@ class Producto extends Model
         'stock',
         'categoria_id',
     ];
+    protected $guarded = [
+        'id',
+    ];
+    protected $casts = [
+        'precio' => 'decimal:2',
+        'stock' => 'integer',
+    ];
 
     public function categoria()
     {
