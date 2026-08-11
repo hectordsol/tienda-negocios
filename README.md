@@ -16,7 +16,7 @@
 - [✅] Crear controlador de Usuarios, Categoría, Carrito
 - [✅] Implementación de CRUD completo Producto, Categoría, Usuario, Carrito
 - [✅] Vistas para gestión de productos con rutas (routes/api.php)
-- [✅] Analizar y documentar flujo de información Laravel
+- [✅] Comparación de arquitecturas MVC
 
 
 ### 🔄 Próximos Pasos
