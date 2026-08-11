@@ -23,6 +23,7 @@
 - [ ] Validaciones de formularios
 - [ ] Validar datos
 - [ ] Incluir regla personalizada
+- [ ] Analizar y documentar el flujo de información de Laravel.
 
 ## 🛠️ Tecnologías Utilizadas
 
