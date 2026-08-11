@@ -82,6 +82,7 @@ tienda-negocios/
 ```bash
 git clone https://github.com/hectordsol/tienda-negocios.git
 cd tienda-negocios
+composer install
 ```
 
 ### 2. Configuración de base de datos para probar
@@ -94,6 +95,17 @@ DB_PORT=3306
 DB_DATABASE=tienda_negocios
 DB_USERNAME=root
 DB_PASSWORD=
+```
+
+Crear base de datos "tienda-negocios" en MySQL
+```bash
+php artisan migrate 
+
+php artisan db:seed --class=CategoriaSeeder 
+php artisan db:seed --class=ProductoSeeder
+php artisan db:seed --class=UsuarioSeeder
+
+php artisan serve
 ```
 
 ## Comparación de proyecto PHP con Laravel
