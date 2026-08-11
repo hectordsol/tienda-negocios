@@ -84,7 +84,6 @@ git clone https://github.com/hectordsol/tienda-negocios.git
 cd tienda-negocios
 ```
 
-### 1. Clonar el repositorio
 ### 2. Configuración de base de datos para probar
 
 .env para probar
