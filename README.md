@@ -345,7 +345,7 @@ En términos simples:
 
 La **ruta** determina qué controlador debe atender la petición; el **controlador** coordina la operación; el **modelo** permite acceder a los datos; y la **vista** presenta esos datos al usuario. Finalmente, Laravel devuelve el resultado como una respuesta HTTP.
 
-> **Nota:** en una API REST que devuelve JSON, normalmente no interviene una vista Blade. El flujo sería, de forma simplificada: **Ruta → Controlador → Modelo → JSON → Cliente**.
+> En una API REST que devuelve JSON, normalmente no interviene una vista Blade. El flujo sería, de forma simplificada: **Ruta → Controlador → Modelo → JSON → Cliente**.
 
 
 ## 👨‍💻 Desarrollador
