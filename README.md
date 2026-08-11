@@ -73,29 +73,32 @@ tienda-negocios/
 │   └── web.php
 └── ...
 ```
+
 ## 🔧 Configuración del Entorno
+
 
 ### 1. Clonar el repositorio
 ```bash
 git clone https://github.com/hectordsol/tienda-negocios.git
 cd tienda-negocios
+```
 
+### 1. Clonar el repositorio
 ### 2. Configuración de base de datos para probar
-.env para probar
 
+.env para probar
+```
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=tienda_negocios
 DB_USERNAME=root
 DB_PASSWORD=
-
-## 👨‍💻 Desarrollador
-Nombre del desarrollador - [Héctor Darío Sol]
+```
 
 ## Comparación de proyecto PHP con Laravel
 
-## 🔄 Comparación de arquitecturas MVC
+### 🔄 Comparación de arquitecturas MVC
 
 Los proyectos [`tienda-ecommerce`](https://github.com/hectordsol/tienda-ecommerce) y [`tienda-negocios`](https://github.com/hectordsol/tienda-negocios) implementan el patrón **MVC (Modelo–Vista–Controlador)**, pero con diferentes niveles de abstracción.
 
@@ -210,3 +213,8 @@ Ambos proyectos aplican el mismo principio fundamental: **separar la lógica de 
 En `tienda-ecommerce`, gran parte de esa infraestructura es desarrollada explícitamente por el programador. En `tienda-negocios`, Laravel proporciona una estructura y numerosas herramientas que permiten concentrarse principalmente en la lógica de la aplicación.
 
 Por lo tanto, el primer proyecto resulta especialmente útil para comprender **cómo funciona MVC y una API REST desde sus fundamentos**, mientras que Laravel resulta más apropiado cuando se busca **productividad, organización, seguridad y escalabilidad en una aplicación de mayor tamaño**.
+
+
+
+## 👨‍💻 Desarrollador
+Nombre del desarrollador - [Héctor Darío Sol]
