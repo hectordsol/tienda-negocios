@@ -19,11 +19,11 @@
 - ✅ Comparación de arquitecturas MVC
 - ✅ Validaciones de formularios
 - ✅ Validar datos
+- ✅ Analizar y documentar el flujo de información de Laravel.
 
 
 ### 🔄 Próximos Pasos
 - [ ] Incluir regla personalizada
-- [ ] Analizar y documentar el flujo de información de Laravel.
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -214,6 +214,138 @@ En `tienda-ecommerce`, gran parte de esa infraestructura es desarrollada explíc
 
 Por lo tanto, el primer proyecto resulta especialmente útil para comprender **cómo funciona MVC y una API REST desde sus fundamentos**, mientras que Laravel resulta más apropiado cuando se busca **productividad, organización, seguridad y escalabilidad en una aplicación de mayor tamaño**.
 
+
+## 🔄 Flujo de una petición en Laravel
+
+Laravel utiliza una arquitectura basada en **MVC (Modelo–Vista–Controlador)**. El flujo básico de información puede resumirse de la siguiente manera:
+
+```text
+Petición HTTP
+     │
+     ▼
+routes/web.php
+     │
+     ▼
+Controlador
+     │
+     ▼
+Modelo ──────► Base de datos
+     │
+     ▼
+Vista Blade
+     │
+     ▼
+Respuesta HTTP
+     │
+     ▼
+Navegador / Cliente
+```
+
+### 1. Petición HTTP
+
+El cliente (navegador, Postman, aplicación frontend, etc.) realiza una petición HTTP, por ejemplo:
+
+```text
+GET /productos
+```
+
+Laravel recibe la petición a través de su punto de entrada y comienza a determinar qué acción debe ejecutar.
+
+### 2. Ruta
+
+El sistema de rutas busca una coincidencia en `routes/web.php` o `routes/api.php`.
+
+Por ejemplo:
+
+```php
+Route::get('/productos', [ProductoController::class, 'index']);
+```
+
+La ruta indica que una petición `GET /productos` debe ser atendida por el método `index()` de `ProductoController`.
+
+### 3. Controlador
+
+El controlador recibe la petición y coordina la lógica necesaria.
+
+```php
+public function index()
+{
+    $productos = Producto::all();
+
+    return view('productos.index', compact('productos'));
+}
+```
+
+El controlador actúa como intermediario entre la petición, los modelos y la respuesta.
+
+### 4. Modelo
+
+El modelo representa los datos de la aplicación y permite interactuar con la base de datos mediante **Eloquent ORM**.
+
+```php
+$productos = Producto::all();
+```
+
+En este caso, `Producto` consulta los registros correspondientes en la base de datos y devuelve la información al controlador.
+
+### 5. Vista
+
+El controlador puede enviar los datos obtenidos a una vista **Blade**:
+
+```php
+return view('productos.index', compact('productos'));
+```
+
+Laravel busca entonces:
+
+```text
+resources/views/productos/index.blade.php
+```
+
+La vista utiliza los datos recibidos para generar el contenido HTML.
+
+### 6. Respuesta HTTP
+
+Finalmente, Laravel genera una respuesta HTTP y la devuelve al cliente.
+
+```text
+Cliente
+   │
+   │ GET /productos
+   ▼
+Ruta
+   │
+   ▼
+ProductoController@index
+   │
+   ▼
+Producto (Eloquent)
+   │
+   ▼
+Base de datos
+   │
+   ▼
+ProductoController
+   │
+   ▼
+Blade
+   │
+   ▼
+HTML
+   │
+   ▼
+Respuesta HTTP
+```
+
+### 🎯 Resumen
+
+En términos simples:
+
+**Ruta → Controlador → Modelo → Base de datos → Controlador → Vista → Respuesta**
+
+La **ruta** determina qué controlador debe atender la petición; el **controlador** coordina la operación; el **modelo** permite acceder a los datos; y la **vista** presenta esos datos al usuario. Finalmente, Laravel devuelve el resultado como una respuesta HTTP.
+
+> **Nota:** en una API REST que devuelve JSON, normalmente no interviene una vista Blade. El flujo sería, de forma simplificada: **Ruta → Controlador → Modelo → JSON → Cliente**.
 
 
 ## 👨‍💻 Desarrollador
