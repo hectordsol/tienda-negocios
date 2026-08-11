@@ -7,21 +7,21 @@
 ## 🚀 Estado Actual del Proyecto
 
 ### Funcionalidades Implementadas
-- [✅] Configuración del sistema de rutas
-- [✅] Conexión a base de datos MySQL
-- [✅] Controlador de Productos
-- [✅] Modelo Producto, Usuario, Categoría, Carrito
-- [✅] Migración de la tablas Usuario, Producto, Categoría, Carrito.
-- [✅] Definir Relaciones en los modelos
-- [✅] Crear controlador de Usuarios, Categoría, Carrito
-- [✅] Implementación de CRUD completo Producto, Categoría, Usuario, Carrito
-- [✅] Vistas para gestión de productos con rutas (routes/api.php)
-- [✅] Comparación de arquitecturas MVC
+- ✅ Configuración del sistema de rutas
+- ✅ Conexión a base de datos MySQL
+- ✅ Controlador de Productos
+- ✅ Modelo Producto, Usuario, Categoría, Carrito
+- ✅ Migración de la tablas Usuario, Producto, Categoría, Carrito.
+- ✅ Definir Relaciones en los modelos
+- ✅ Crear controlador de Usuarios, Categoría, Carrito
+- ✅ Implementación de CRUD completo Producto, Categoría, Usuario, Carrito
+- ✅ Vistas para gestión de productos con rutas (routes/api.php)
+- ✅ Comparación de arquitecturas MVC
+- ✅ Validaciones de formularios
+- ✅ Validar datos
 
 
 ### 🔄 Próximos Pasos
-- [ ] Validaciones de formularios
-- [ ] Validar datos
 - [ ] Incluir regla personalizada
 - [ ] Analizar y documentar el flujo de información de Laravel.
 

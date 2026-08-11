@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Producto;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreProductoRequest;
 
 class ProductoController extends Controller
 {
@@ -13,19 +14,25 @@ class ProductoController extends Controller
 
     return response()->json($productos);
     }
-    public function store(Request $request)
+    public function store(StoreProductoRequest $request)
     {
-        $validatedData = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
-            'precio' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'categoria_id' => 'required|exists:categorias,id',
-        ]); 
-        $producto = Producto::create($validatedData);
+        $producto = Producto::create($request->validated());
 
         return response()->json($producto, 201);
     }
+    // public function store(Request $request)
+    // {
+    //     $validatedData = $request->validate([
+    //         'nombre' => 'required|string|max:255',
+    //         'descripcion' => 'nullable|string',
+    //         'precio' => 'required|numeric|min:0',
+    //         'stock' => 'required|integer|min:0',
+    //         'categoria_id' => 'required|exists:categorias,id',
+    //     ]); 
+    //     $producto = Producto::create($validatedData);
+
+    //     return response()->json($producto, 201);
+    // }
     public function show($id)
     {
         $producto = Producto::find($id);
@@ -36,18 +43,12 @@ class ProductoController extends Controller
             return response()->json(['message' => 'Producto no encontrado'], 404);
         }
     }
-    public function update(Request $request, $id)
+    public function update(StoreProductoRequest $request, $id)
     {
         $producto = Producto::find($id);
 
         if ($producto) {
-            $validatedData = $request->validate([
-                'nombre' => 'required|string|max:255',
-                'descripcion' => 'nullable|string',
-                'precio' => 'required|numeric|min:0',
-                'stock' => 'required|integer|min:0',
-                'categoria_id' => 'required|exists:categorias,id',
-            ]);
+            $validatedData = $request->validated();
 
             $producto->update($validatedData);
 
