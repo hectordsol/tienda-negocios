@@ -15,16 +15,15 @@ class CategoriaController extends Controller
     }
     public function store(Request $request)
     {
-        $validatedData = $request->validate(
-            [
+        $validatedData = $request->validate([
                 'nombre' => 'required|string|max:255',
-                'descripcion' => 'nullable|string',
                 'slug' => 'required|string|max:255|unique:categorias,slug',
-            ]
-        ); 
+                'descripcion' => 'nullable|string',
+            ]);
         $categoria = Categoria::create($validatedData);
-
         return response()->json($categoria, 201);
+
+        //return response()->json($categoria, 201);
     }
     public function show($id)
     {

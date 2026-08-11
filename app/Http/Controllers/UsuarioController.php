@@ -17,6 +17,7 @@ class UsuarioController extends Controller
     {
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:usuarios,email',
             'password' => 'required|string|min:8',
         ]); 
@@ -41,6 +42,7 @@ class UsuarioController extends Controller
         if ($usuario) {
             $validatedData = $request->validate([
                 'nombre' => 'required|string|max:255',
+                'apellido' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:usuarios,email',
                 'password' => 'required|string|min:8',
             ]);

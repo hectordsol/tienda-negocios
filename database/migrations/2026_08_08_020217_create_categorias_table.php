@@ -16,7 +16,7 @@ return new class extends Migration
             // Datos básicos
             $table->string('nombre');
             $table->string('slug')->unique();
-            $table->text('descripcion')->nullable();
+            $table->string('descripcion')->nullable();
             $table->timestamps();
         });
     }
