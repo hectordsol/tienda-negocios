@@ -14,19 +14,11 @@ return new class extends Migration
         Schema::create('carritos', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->foreignId('usuario_id')
-                ->nullable()
-                ->constrained('usuarios')
-                ->onDelete('cascade');
-            $table->foreignId('producto_id')
-                ->nullable()
-                ->constrained('productos')
-                ->onDelete('cascade');
-            $table->integer('cantidad')->default(1);
+            $table->foreignId('usuario_id')->constrained('usuarios')->unique()->onDelete('cascade');
+            $table->enum('estado', ['activo', 'finalizado'])->default('activo');
         });
     }
 
-    
     /**
      * Reverse the migrations.
      */

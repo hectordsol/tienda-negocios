@@ -19,8 +19,8 @@ class CategoriaSeeder extends Seeder
             'descripcion' => 'Productos electrónicos como teléfonos, computadoras, televisores, etc.'
             ]);
         Categoria::create([
-            'nombre' => 'Ropa',
-            'slug' => 'ropa',
+            'nombre' => 'Indumentaria',
+            'slug' => 'indumentaria',
             'descripcion' => 'Ropa para hombres, mujeres y niños.'
             ]);
         Categoria::create([

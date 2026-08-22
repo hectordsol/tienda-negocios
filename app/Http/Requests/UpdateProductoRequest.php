@@ -22,16 +22,17 @@ class UpdateProductoRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [//sometimes se utiliza para indicar que el campo es opcional,
-                // pero si se proporciona, debe cumplir con las reglas de validación
-                // especificadas para eso necesita que esté required también.
+        return [// sometimes se utiliza para indicar que el campo es opcional,
+            // pero si se proporciona, debe cumplir con las reglas de validación
+            // especificadas para eso necesita que esté required también.
             'nombre' => 'sometimes|required|string|max:255',
             'descripcion' => 'nullable|string',
-            'precio' => 'sometimes|required|numeric|min:0',
+            'precio' => 'sometimes|required|numeric|min:0.0',
             'stock' => 'sometimes|required|integer|min:0',
             'categoria_id' => 'sometimes|required|exists:categorias,id',
         ];
     }
+
     public function messages(): array
     {
         return [
@@ -39,6 +40,7 @@ class UpdateProductoRequest extends FormRequest
             'nombre.string' => 'El nombre del producto debe ser una cadena de texto.',
             'nombre.max' => 'El nombre del producto no puede tener más de 255 caracteres.',
             'descripcion.string' => 'La descripción del producto debe ser una cadena de texto.',
+            'descripcion.max' => 'La descripción del producto no puede tener más de 255 caracteres.',
             'precio.required' => 'El precio del producto es obligatorio.',
             'precio.numeric' => 'El precio del producto debe ser un número.',
             'precio.min' => 'El precio del producto no puede ser negativo.',

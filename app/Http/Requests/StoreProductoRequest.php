@@ -25,11 +25,12 @@ class StoreProductoRequest extends FormRequest
         return [
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
-            'precio' => 'required|numeric|min:0',
+            'precio' => 'required|numeric|min:0.0',
             'stock' => 'required|integer|min:0',
             'categoria_id' => 'required|exists:categorias,id',
         ];
     }
+
     public function messages(): array
     {
         return [
@@ -37,6 +38,7 @@ class StoreProductoRequest extends FormRequest
             'nombre.string' => 'El nombre del producto debe ser una cadena de texto.',
             'nombre.max' => 'El nombre del producto no puede tener más de 255 caracteres.',
             'descripcion.string' => 'La descripción del producto debe ser una cadena de texto.',
+            'descripcion.max' => 'La descripción del producto no puede tener más de 255 caracteres.',
             'precio.required' => 'El precio del producto es obligatorio.',
             'precio.numeric' => 'El precio del producto debe ser un número.',
             'precio.min' => 'El precio del producto no puede ser negativo.',
