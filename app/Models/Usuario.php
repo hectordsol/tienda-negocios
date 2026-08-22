@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['nombre', 'apellido' ,'email', 'password'])]
+#[Fillable(['nombre', 'apellido', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class Usuario extends Authenticatable
 {
@@ -32,7 +32,11 @@ class Usuario extends Authenticatable
 
     public function carrito()
     {
-        return $this->hasMany(Carrito::class);
+        return $this->hasOne(Carrito::class)->where('estado', 'activo');
     }
-    
+
+    public function carritoItems()
+    {
+        return $this->hasManyThrough(Carritoitem::class, Carrito::class, 'usuario_id', 'carrito_id');
+    }
 }
