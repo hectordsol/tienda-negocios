@@ -9,19 +9,19 @@
 ### Funcionalidades Implementadas
 - ✅ Configuración del sistema de rutas
 - ✅ Conexión a base de datos MySQL
-- ✅ Controlador de Productos
-- ✅ Modelo Producto, Usuario, Categoría, Carrito
-- ✅ Migración de la tablas Usuario, Producto, Categoría, Carrito.
+- ✅ Modelo Producto, Usuario, Categoría, Carrito, Carritoitem
+- ✅ Migración de la tablas Usuario, Producto, Categoría, Carrito y Carritoitem.
 - ✅ Definir Relaciones en los modelos
-- ✅ Crear controlador de Usuarios, Categoría, Carrito
+- ✅ Crear Resource controlador de Usuarios, Categoría, Carrito, Producto
 - ✅ Implementación de CRUD completo Producto, Categoría, Usuario, Carrito
 - ✅ Vistas para gestión de productos con rutas (routes/api.php)
-- ✅ Validaciones de formularios
-- ✅ Validar datos
+- ✅ Validar datos con Requests
 
 
 ### 🔄 Próximos Pasos
 - [ ] Incluir regla personalizada
+- [ ] Diseñar DTO (Data Transfer Object)
+- [ ] Busquedas personalizadas
 
 ## 🛠️ Tecnologías Utilizadas
 
