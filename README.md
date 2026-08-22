@@ -16,12 +16,12 @@
 - ✅ Implementación de CRUD completo Producto, Categoría, Usuario, Carrito
 - ✅ Vistas para gestión de productos con rutas (routes/api.php)
 - ✅ Validar datos con Requests
+- ✅ Busquedas personalizadas
 
 
 ### 🔄 Próximos Pasos
 - [ ] Incluir regla personalizada
 - [ ] Diseñar DTO (Data Transfer Object)
-- [ ] Busquedas personalizadas
 
 ## 🛠️ Tecnologías Utilizadas
 
