@@ -17,11 +17,11 @@
 - ✅ Vistas para gestión de productos con rutas (routes/api.php)
 - ✅ Validar datos con Requests
 - ✅ Busquedas personalizadas
+- ✅ Diseñar DTO (Data Transfer Object)
 
 
 ### 🔄 Próximos Pasos
 - [ ] Incluir regla personalizada
-- [ ] Diseñar DTO (Data Transfer Object)
 
 ## 🛠️ Tecnologías Utilizadas
 
