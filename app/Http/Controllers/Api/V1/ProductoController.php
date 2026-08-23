@@ -7,15 +7,21 @@ use App\Http\Requests\StoreProductoRequest;
 use App\Http\Requests\UpdateProductoRequest;
 use App\Models\Producto;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProductoController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $productos = Producto::all();
+        $productos = Producto::query()
+                    ->when($request->nombre, 
+                            function ($query,$nombre) {
+                                $query->where('nombre', 'like', "%{$nombre}%");
+                            })
+            ->get();
 
         return response()->json($productos, 200);
     }
