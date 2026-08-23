@@ -17,7 +17,7 @@
 - ✅ Vistas para gestión de productos con rutas (routes/api.php)
 - ✅ Validar datos con Requests
 - ✅ Busquedas personalizadas
-- ✅ Diseñar DTO (Data Transfer Object)
+- ✅ Diseñar en Productos DTO (Data Transfer Object)
 
 
 ### 🔄 Próximos Pasos
@@ -51,13 +51,27 @@ tienda-negocios/
 │   │       │       ├── CategoriaController.php
 │   │       │       ├── ProductoController.php
 │   │       │       └── UsuarioController.php
-│   │       └──Controller.php
-│   └── Models/
-│       ├── Carrito.php
-│       ├── Carritoitem.php
-│       ├── Categoria.php
-│       ├── Producto.php
-│       └── Usuario.php
+│   │       ├──Controller.php
+│   │       ├── Requests/
+│   │       │   ├── StoreCarritoRequest.php
+│   │       │   ├── StoreCategoriaRequest.php
+│   │       │   ├── StoreProductoRequest.php
+│   │       │   ├── StoreUsuarioRequest.php
+│   │       │   ├── UpdateCategoriaRequest.php
+│   │       │   ├── UpdateProductoRequest.php
+│   │       │   └── UpdateUsuarioRequest.php
+│   │       └── Resources/
+│   │           └──ProductoResource.php
+│   ├── Models/
+│   │   ├── Carrito.php
+│   │   ├── Carritoitem.php
+│   │   ├── Categoria.php
+│   │   ├── Producto.php
+│   │   └── Usuario.php
+│   ├── Providers/
+│   │   └── AppServiceProvider.php
+│   └── Services/
+│       └── ProductoService.php
 ├── database/
 │   ├── migrations/
 │   │   ├── [timestamp]_create_usuarios_table.php
@@ -128,7 +142,7 @@ Crear base de datos "tienda-negocios" en MySQL
 php artisan migrate 
 ```
 
-Si el proyecto dispone de seeders:
+Sembrar semillas con los seeders:
 
 ```bash
 php artisan migrate --seed
@@ -170,20 +184,6 @@ Códigos de Estado: Se utilizan los estándares HTTP (200 OK, 201 Creado, 204 el
 
 Autenticación: (Pendiente de implementar. Por ahora, las rutas son públicas).
 
-### 📦 Recursos
-1. Categorías
-Endpoints para la gestión del catálogo de categorías.
-
-Método	Endpoint	Controlador	Método	Descripción
-GET	/api/categorias	CategoriaController	index()	Lista todas las categorías.
-POST	/api/categorias	CategoriaController	store()	Crea una nueva categoría.
-GET	/api/categorias/{id}	CategoriaController	show()	Muestra los detalles de una categoría específica.
-PUT/PATCH	/api/categorias/{id}	CategoriaController	update()	Actualiza una categoría existente.
-DELETE	/api/categorias/{id}	CategoriaController	destroy()	Elimina una categoría.
-
-
-
-
 ## 📡 API REST
 
 La aplicación dispone de una API REST para gestionar **categorías, productos, usuarios y carritos**.
@@ -220,7 +220,7 @@ Las categorías permiten clasificar los productos de la tienda.
 ### Obtener todas las categorías
 
 ```http
-GET /api/v1/categorias
+GET http://127.0.0.1:8000/api/v1/categorias
 ```
 
 **Parámetros:** ninguno.
@@ -245,7 +245,7 @@ El método obtiene todas las categorías mediante `Categoria::all()` y devuelve 
 ### Obtener una categoría
 
 ```http
-GET /api/categorias/{id}
+GET http://127.0.0.1:8000/api/v1/categorias/{id}
 ```
 
 **Parámetros de URL:**
@@ -257,7 +257,7 @@ GET /api/categorias/{id}
 Ejemplo:
 
 ```http
-GET /api/categorias/1
+GET http://127.0.0.1:8000/api/v1/categorias/1
 ```
 
 **Respuesta exitosa:** `200 OK`
@@ -275,7 +275,11 @@ Si la categoría no existe:
 
 ```json
 {
-    "message": "Categoría no encontrada"
+    "message": "Recurso no encontrado",
+    "status": 404,
+    "errors": {
+        "error": "No query results for model [App\\Models\\Categoria] 122"
+    }
 }
 ```
 
@@ -284,7 +288,7 @@ Código HTTP: `404 Not Found`.
 ### Crear una categoría
 
 ```http
-POST /api/categorias
+POST http://127.0.0.1:8000/api/v1/categorias
 ```
 
 **Body JSON:**
@@ -321,7 +325,7 @@ El `slug` debe ser único dentro de la tabla `categorias`.
 ### Actualizar una categoría
 
 ```http
-PUT /api/categorias/{id}
+PUT http://127.0.0.1:8000/api/v1/categorias/{id}
 ```
 
 **Parámetro de URL:**
@@ -350,7 +354,11 @@ Si no existe:
 
 ```json
 {
-    "message": "Categoría no encontrada"
+    "message": "Recurso no encontrado",
+    "status": 404,
+    "errors": {
+        "error": "No query results for model [App\\Models\\Categoria] 122"
+    }
 }
 ```
 
@@ -359,7 +367,7 @@ Código HTTP: `404 Not Found`.
 ### Eliminar una categoría
 
 ```http
-DELETE /api/categorias/{id}
+DELETE http://127.0.0.1:8000/api/v1/categorias/{id}
 ```
 
 **Parámetro:**
@@ -380,7 +388,11 @@ Si no existe:
 
 ```json
 {
-    "message": "Categoría no encontrada"
+    "message": "Recurso no encontrado",
+    "status": 404,
+    "errors": {
+        "error": "No query results for model [App\\Models\\Categoria] 122"
+    }
 }
 ```
 
@@ -395,7 +407,7 @@ Los productos representan los artículos disponibles en la tienda.
 ### Obtener todos los productos
 
 ```http
-GET /api/productos
+GET http://127.0.0.1:8000/api/v1/productos
 ```
 
 **Parámetros:** ninguno.
@@ -409,7 +421,7 @@ Devuelve un array JSON con todos los productos.
 ### Obtener un producto
 
 ```http
-GET /api/productos/{id}
+GET http://127.0.0.1:8000/api/v1/productos/{id}
 ```
 
 **Parámetro:**
@@ -421,7 +433,7 @@ GET /api/productos/{id}
 Ejemplo:
 
 ```http
-GET /api/productos/1
+GET http://127.0.0.1:8000/api/v1/productos/1
 ```
 
 Si existe, devuelve el producto:
@@ -450,7 +462,7 @@ Código HTTP: `404 Not Found`.
 ### Crear un producto
 
 ```http
-POST /api/productos
+POST http://127.0.0.1:8000/api/v1/productos
 ```
 
 **Body JSON:**
@@ -484,7 +496,7 @@ Devuelve el producto creado en formato JSON.
 ### Actualizar un producto
 
 ```http
-PUT /api/productos/{producto}
+PUT http://127.0.0.1:8000/api/v1/productos/{producto}
 ```
 
 **Parámetro:**
@@ -496,7 +508,7 @@ PUT /api/productos/{producto}
 Ejemplo:
 
 ```http
-PUT /api/productos/1
+PUT http://127.0.0.1:8000/api/v1/productos/1
 ```
 
 **Body JSON:**
@@ -517,7 +529,7 @@ Devuelve el producto actualizado.
 ### Eliminar un producto
 
 ```http
-DELETE /api/productos/{id}
+DELETE http://127.0.0.1:8000/api/v1/productos/{id}
 ```
 
 **Parámetro:**
@@ -553,7 +565,7 @@ Los usuarios representan las personas registradas en la aplicación.
 ### Obtener todos los usuarios
 
 ```http
-GET /api/usuarios
+GET http://127.0.0.1:8000/api/v1/usuarios
 ```
 
 **Parámetros:** ninguno.
@@ -565,7 +577,7 @@ Devuelve el listado de usuarios en formato JSON.
 ### Obtener un usuario
 
 ```http
-GET /api/usuarios/{id}
+GET http://127.0.0.1:8000/api/v1/usuarios/{id}
 ```
 
 **Parámetro:**
@@ -577,7 +589,7 @@ GET /api/usuarios/{id}
 Ejemplo:
 
 ```http
-GET /api/usuarios/1
+GET http://127.0.0.1:8000/api/v1/usuarios/1
 ```
 
 Si no existe:
@@ -593,7 +605,7 @@ Código HTTP: `404 Not Found`.
 ### Crear un usuario
 
 ```http
-POST /api/usuarios
+POST http://127.0.0.1:8000/api/v1/usuarios
 ```
 
 **Body JSON:**
@@ -625,7 +637,7 @@ Devuelve el usuario creado en formato JSON.
 ### Actualizar un usuario
 
 ```http
-PUT /api/usuarios/{id}
+PUT http://127.0.0.1:8000/api/v1/usuarios/{id}
 ```
 
 **Parámetro:**
@@ -654,7 +666,7 @@ Devuelve el usuario actualizado.
 ### Eliminar un usuario
 
 ```http
-DELETE /api/usuarios/{id}
+DELETE http://127.0.0.1:8000/api/v1/usuarios/{id}
 ```
 
 **Parámetro:**
@@ -690,7 +702,7 @@ El carrito relaciona un usuario con un producto y registra la cantidad solicitad
 ### Obtener todos los carritos
 
 ```http
-GET /api/carrito
+GET http://127.0.0.1:8000/api/v1/carritos
 ```
 
 **Parámetros:** ninguno.
@@ -702,7 +714,7 @@ Devuelve todos los registros del carrito.
 ### Obtener un carrito
 
 ```http
-GET /api/carrito/{id}
+GET http://127.0.0.1:8000/api/v1/carritos/{usuario_id}
 ```
 
 **Parámetro:**
@@ -714,7 +726,7 @@ GET /api/carrito/{id}
 Ejemplo:
 
 ```http
-GET /api/carrito/1
+GET /api/carritos/1
 ```
 
 Si no existe:
@@ -730,7 +742,7 @@ Código HTTP: `404 Not Found`.
 ### Crear un registro de carrito
 
 ```http
-POST /api/carrito
+POST http://127.0.0.1:8000/api/v1/carritos/
 ```
 
 **Body JSON:**
@@ -760,7 +772,7 @@ Devuelve el registro creado en formato JSON.
 ### Actualizar un carrito
 
 ```http
-PUT /api/carrito/{id}
+PUT http://127.0.0.1:8000/api/v1/carritos/{id}
 ```
 
 **Parámetro:**
@@ -788,7 +800,7 @@ Devuelve el registro actualizado.
 ### Eliminar un carrito
 
 ```http
-DELETE /api/carrito/{id}
+DELETE http://127.0.0.1:8000/api/v1/carritos/{usuario_id}/productos/{producto_id}
 ```
 
 **Parámetro:**
@@ -801,7 +813,7 @@ DELETE /api/carrito/{id}
 
 ```json
 {
-    "message": "Carrito eliminado"
+    "message": "Producto de Carrito eliminado"
 }
 ```
 
@@ -821,26 +833,28 @@ Código HTTP: `404 Not Found`.
 
 | Recurso | Método | Endpoint | Operación |
 |---|---|---|---|
-| Categorías | GET | `/api/categorias` | Listar |
-| Categorías | GET | `/api/categorias/{id}` | Obtener |
-| Categorías | POST | `/api/categorias` | Crear |
-| Categorías | PUT | `/api/categorias/{id}` | Actualizar |
-| Categorías | DELETE | `/api/categorias/{id}` | Eliminar |
-| Productos | GET | `/api/productos` | Listar |
-| Productos | GET | `/api/productos/{id}` | Obtener |
-| Productos | POST | `/api/productos` | Crear |
-| Productos | PUT | `/api/productos/{producto}` | Actualizar |
-| Productos | DELETE | `/api/productos/{id}` | Eliminar |
-| Usuarios | GET | `/api/usuarios` | Listar |
-| Usuarios | GET | `/api/usuarios/{id}` | Obtener |
-| Usuarios | POST | `/api/usuarios` | Crear |
-| Usuarios | PUT | `/api/usuarios/{id}` | Actualizar |
-| Usuarios | DELETE | `/api/usuarios/{id}` | Eliminar |
-| Carrito | GET | `/api/carrito` | Listar |
-| Carrito | GET | `/api/carrito/{id}` | Obtener |
-| Carrito | POST | `/api/carrito` | Crear |
-| Carrito | PUT | `/api/carrito/{id}` | Actualizar |
-| Carrito | DELETE | `/api/carrito/{id}` | Eliminar |
+| Categorías | GET | `/api/v1/categorias` | Listar |
+| Categorías | GET | `/api/v1/categorias/{id}` | Obtener |
+| Categorías | POST | `/api/v1/categorias` | Crear |
+| Categorías | PUT | `/api/v1/categorias/{id}` | Actualizar |
+| Categorías | DELETE | `/api/v1/categorias/{id}` | Eliminar |
+| Productos | GET | `/api/v1/productos` | Listar |
+| Productos | GET | `/api/v1/productos/{id}` | Obtener |
+| Productos | POST | `/api/v1/productos` | Crear |
+| Productos | PUT | `/api/v1/productos/{producto}` | Actualizar |
+| Productos | DELETE | `/api/v1/productos/{id}` | Eliminar |
+| Usuarios | GET | `/api/v1/usuarios` | Listar |
+| Usuarios | GET | `/api/v1/usuarios/{id}` | Obtener |
+| Usuarios | POST | `/api/v1/usuarios` | Crear |
+| Usuarios | PUT | `/api/v1/usuarios/{id}` | Actualizar |
+| Usuarios | DELETE | `/api/v1/usuarios/{id}` | Eliminar |
+| Carrito | GET | `/api/v1/carritos` | Listar |
+| Carrito | GET | `/api/v1/carritos/{usuario_id}` | Obtener |
+| Carrito | POST | `/api/v1/carritos` | Crear |
+| Carrito | PUT | `/api/v1/carritos/{usuario_id}/productos/{producto_id}` | Actualizar un producto|
+| Carrito | PUT | `/api/v1/carritos/{usuario_id}` | Actualizar |
+| Carrito | DELETE | `/api/v1/carritos/{usuario_id}/productos/{producto_id}` | Eliminar un producto|
+| Carrito | DELETE | `/api/v1/carritos/{id}` | Eliminar |
 
 Las rutas anteriores corresponden a las definidas actualmente en `routes/api.php` del proyecto.
 
@@ -895,6 +909,7 @@ con código HTTP `404 Not Found`, utilizando mensajes específicos para cada ent
 |---|---|
 | `200 OK` | Operación realizada correctamente |
 | `201 Created` | Registro creado correctamente |
+| `204 Deleted` | Registro borrado correctamente |
 | `404 Not Found` | Recurso solicitado inexistente |
 | `422 Unprocessable Entity` | Datos enviados que no superan la validación |
 
