@@ -62,9 +62,12 @@ class CarritoController extends Controller
      */
     public function delete(Usuario $usuario): JsonResponse
     {
-        $usuario->carritoItems()->delete();
+        $usuario->carrito()->delete();
 
-        return response()->json(null, 204);
+        return response()->json([
+                'message' => 'Carrito eliminado',
+                'usuario' => $usuario,
+            ], 204);
     }
 
     /**
@@ -85,6 +88,8 @@ class CarritoController extends Controller
 
         $item->delete();
 
-        return response()->json(null, 204);
+        return response()->json([
+                'message' => 'Producto de Carrito eliminado',
+            ], 204);
     }
 }

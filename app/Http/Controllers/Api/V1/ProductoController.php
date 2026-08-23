@@ -7,27 +7,36 @@ use App\Http\Requests\StoreProductoRequest;
 use App\Http\Requests\UpdateProductoRequest;
 use App\Models\Producto;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Http\Resources\ProductoResource;
+use App\Services\ProductoService;
 
 class ProductoController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $productos = Producto::all();
+        $productos = Producto::query()
+                    ->when($request->nombre, 
+                            function ($query,$nombre) {
+                                $query->where('nombre', 'like', "%{$nombre}%");
+                            })
+            ->get();
 
-        return response()->json($productos, 200);
+        return ProductoResource::collection($productos);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreProductoRequest $request): JsonResponse
-    {
-        $producto = Producto::create($request->validated());
+    public function store(StoreProductoRequest $request, ProductoService $productoService): JsonResponse
+    {         
+        $producto = $productoService->createProducto($request->toDTO());
 
-        return response()->json($producto, 201);
+        return response()->json(new ProductoResource($producto), 201);
     }
 
     /**
