@@ -7,16 +7,21 @@ use App\Http\Requests\StoreCategoriaRequest;
 use App\Http\Requests\UpdateCategoriaRequest;
 use App\Models\Categoria;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CategoriaController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $categorias = Categoria::all();
-
+        $categorias = Categoria::query()
+                    ->when($request->nombre, 
+                            function ($query,$nombre) {
+                                $query->where('nombre', 'like', "%{$nombre}%");
+                            })
+            ->get();
         return response()->json($categorias, 200);
     }
 
