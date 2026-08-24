@@ -7,10 +7,7 @@ use App\Models\Producto;
 
 class ProductoService
 {
-    /**
-     * Create a new class instance.
-     */
-    public  function createProducto(ProductoDTO $productoDTO): Producto
+    public function createProducto(ProductoDTO $productoDTO): Producto
     {
         return Producto::create($productoDTO->toArray());
     }
