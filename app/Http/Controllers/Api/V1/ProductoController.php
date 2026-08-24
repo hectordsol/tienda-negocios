@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductoRequest;
 use App\Http\Requests\UpdateProductoRequest;
+use App\Http\Resources\ProductoResource;
 use App\Models\Producto;
+use App\Services\ProductoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Http\Resources\ProductoResource;
-use App\Services\ProductoService;
 
 class ProductoController extends Controller
 {
@@ -20,10 +20,10 @@ class ProductoController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $productos = Producto::query()
-                    ->when($request->nombre, 
-                            function ($query,$nombre) {
-                                $query->where('nombre', 'like', "%{$nombre}%");
-                            })
+            ->when($request->nombre,
+                function ($query, $nombre) {
+                    $query->where('nombre', 'like', "%{$nombre}%");
+                })
             ->get();
 
         return ProductoResource::collection($productos);
@@ -33,7 +33,7 @@ class ProductoController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(StoreProductoRequest $request, ProductoService $productoService): JsonResponse
-    {         
+    {
         $producto = $productoService->createProducto($request->toDTO());
 
         return response()->json(new ProductoResource($producto), 201);
@@ -44,7 +44,7 @@ class ProductoController extends Controller
      */
     public function show(Producto $producto): JsonResponse
     {
-        return response()->json($producto, 200);
+        return response()->json(new ProductoResource($producto), 200);
     }
 
     /**
@@ -55,7 +55,7 @@ class ProductoController extends Controller
 
         $producto->update($request->validated());
 
-        return response()->json($producto, 200);
+        return response()->json(new ProductoResource($producto), 200);
     }
 
     /**
@@ -65,6 +65,6 @@ class ProductoController extends Controller
     {
         $producto->delete();
 
-        return response()->json($producto, 204);
+        return response()->json(new ProductoResource($producto), 204);
     }
 }

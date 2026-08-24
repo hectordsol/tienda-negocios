@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCarritoRequest;
+use App\Http\Resources\CarritoitemResource;
+use App\Http\Resources\CarritoResource;
 use App\Models\Carrito;
 use App\Models\Producto;
 use App\Models\Usuario;
+use App\Services\CarritoitemService;
+use App\Services\CarritoService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class CarritoController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Muestra todos los carritos
      */
     public function index(): JsonResponse
     {
@@ -22,60 +27,58 @@ class CarritoController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Crea o actualiza carrito creando o actualizando un item (producto)
      */
-    public function store(StoreCarritoRequest $request): JsonResponse
+    public function store(
+        StoreCarritoRequest $request,
+        CarritoService $carritoService,
+        CarritoitemService $carritoitemService,
+    ) : JsonResponse 
     {
-        $datos = $request->validated();
-        $carrito = Carrito::firstOrCreate([
-            'usuario_id' => $datos['usuario_id'],
-            'estado' => 'activo',
-        ]);
+        $item = DB::transaction(function () use ($request, $carritoService, $carritoitemService) {
+            $carrito = $carritoService->findOrCreateCarrito(
+                (int) $request->validated('usuario_id'),
+            );
 
-        $item = $carrito->items()->updateOrCreate(
-            ['producto_id' => $datos['producto_id']],
-            [
-                'cantidad' => $datos['cantidad'],
-                'precio_unitario' => Producto::findOrFail($datos['producto_id'])->precio,
-            ],
-        );
-        return response()->json($item->load('producto'), 201);
-
+            return $carritoitemService->findOrCreateCarritoitem($carrito, $request->toDTO());
+        });
+        return response()->json(new CarritoitemResource($item->load('producto')), 201);
     }
 
     /**
-     * Display the specified resource.
+     * Muestra el carrito de usuario.
      */
     public function show(Usuario $usuario): JsonResponse
     {
-        $items = $usuario->carritoItems()
-            ->with('producto')
-            ->get()
-            ->filter()
-            ->values();
+        $carrito = $usuario->carrito()
+            ->with('items.producto')
+            ->first();
 
-        return response()->json($items, 200);
+        if ($carrito === null) {
+            return response()->json([
+                'message' => 'El usuario no tiene un carrito activo.',
+            ], 404);
+        }
+
+        return response()->json(new CarritoResource($carrito), 200);
     }
-
     /**
-     * Update the specified resource in storage.
+     * Borra Carrito completo del usuario.
      */
     public function delete(Usuario $usuario): JsonResponse
     {
         $usuario->carrito()->delete();
 
         return response()->json([
-                'message' => 'Carrito eliminado',
-                'usuario' => $usuario,
-            ], 204);
+            'message' => 'Carrito eliminado',
+            'usuario' => $usuario,
+        ], 204);
     }
-
     /**
-     * Remove the specified resource from storage.
+     * Borra un producto de un usuario.
      */
     public function destroy(Usuario $usuario, Producto $producto): JsonResponse
     {
-
         $item = $usuario->carritoItems()
             ->whereBelongsTo($producto, 'producto')
             ->first();
@@ -89,7 +92,7 @@ class CarritoController extends Controller
         $item->delete();
 
         return response()->json([
-                'message' => 'Producto de Carrito eliminado',
-            ], 204);
+            'message' => 'Producto de Carrito eliminado',
+        ], 204);
     }
 }
