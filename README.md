@@ -772,12 +772,13 @@ Código HTTP: `404 Not Found`.
 ```http
 GET /api/carritos/3
 ```
-Si existe usuario:
+Si existe usuario y no tiene carrito:
 
 ```json
 {
     "message": "El usuario no tiene un carrito activo."
-}```
+}
+```
 
 Código HTTP: `404 Not Found`.
 
@@ -857,7 +858,7 @@ DELETE http://127.0.0.1:8000/api/v1/carritos/{usuario_id}/productos/{producto_id
 
 Código HTTP: `204 No Content`.
 
-Si no existe:
+Si no existe el producto en el carrito:
 
 ```json
 {
