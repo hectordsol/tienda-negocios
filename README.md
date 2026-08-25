@@ -695,9 +695,13 @@ Código HTTP: `404 Not Found`.
 
 ---
 
-# 🛒 Carrito
+# 🛒 Carrito de Compras
 
-El carrito relaciona un usuario con un producto y registra la cantidad solicitada.
+El carrito de compras permite a los usuarios seleccionar y gestionar productos antes de realizar una compra. La API permite consultar, agregar, actualizar y eliminar items del carrito.
+
+## Estructura de Datos
+
+El carrito se compone de items, donde cada item representa un producto con una cantidad específica. Un usuario tiene un único carrito activo representado por la colección de sus items.
 
 ### Obtener todos los carritos
 
@@ -709,7 +713,7 @@ GET http://127.0.0.1:8000/api/v1/carritos
 
 **Respuesta:** `200 OK`
 
-Devuelve todos los registros del carrito.
+Devuelve todos los registros de todos los usuario que tengan carrito.
 
 ### Obtener un carrito
 
@@ -729,17 +733,56 @@ Ejemplo:
 GET /api/carritos/1
 ```
 
-Si no existe:
+```json
+{
+    "usuario_id": 1,
+    "items": [
+        {
+            "id": 1,
+            "producto_id": 5,
+            "producto_nombre": "Laptop Gamer",
+            "cantidad": 2,
+            "precio_unitario": 850.00,
+            "subtotal": 1700.00
+        }
+    ],
+    "total_items": 3,
+    "total": 2450.50
+}
+```
+Código HTTP: `200 OK`.
+Muestra listado de productos, con la cantidad de cada uno, y un resumen con el total de items, y precio total.
+
+```http
+GET /api/carritos/33
+```
+Si no existe usuario:
 
 ```json
 {
-    "message": "Carrito no encontrado"
+    "message": "Recurso no encontrado",
+    "status": 404,
+    "errors": {
+        "error": "No query results for model [App\\Models\\Usuario] 33"
+    }
+}
+```
+Código HTTP: `404 Not Found`.
+
+```http
+GET /api/carritos/3
+```
+Si existe usuario y no tiene carrito:
+
+```json
+{
+    "message": "El usuario no tiene un carrito activo."
 }
 ```
 
 Código HTTP: `404 Not Found`.
 
-### Crear un registro de carrito
+### Crear o actualiza un Carrito, creando o actualizando el registro item (producto-cantidad) 
 
 ```http
 POST http://127.0.0.1:8000/api/v1/carritos/
@@ -750,8 +793,8 @@ POST http://127.0.0.1:8000/api/v1/carritos/
 ```json
 {
     "usuario_id": 1,
-    "producto_id": 3,
-    "cantidad": 2
+    "producto_id": 4,
+    "cantidad": 1
 }
 ```
 
@@ -767,37 +810,39 @@ Estas reglas están implementadas en `CarritoController`.
 
 **Respuesta exitosa:** `201 Created`
 
-Devuelve el registro creado en formato JSON.
+```json
+{
+    "id": 8,
+    "producto_id": 4,
+    "producto_nombre": "Producto de ejemplo4",
+    "cantidad": 1,
+    "precio_unitario": 88.99,
+    "subtotal": 88.99
+}
+```
 
-### Actualizar un carrito
+Devuelve el registro creado en formato JSON. Si el carrito no exite lo crea, sino lo actualiza. Si el producto no existe en el carrito lo crea, sino actualiza la cantidad con el nuevo valor.
+
+Código HTTP: `201 Created`.
+
+### Vaciar un carrito de usuario id
 
 ```http
-PUT http://127.0.0.1:8000/api/v1/carritos/{id}
+DELETE http://127.0.0.1:8000/api/v1/carritos/{usuario_id}
 ```
 
 **Parámetro:**
 
 | Parámetro | Tipo | Descripción |
 |---|---|---|
-| `id` | integer | Identificador del registro |
+| `id` | integer | Identificador del registro usuario |
 
-**Body JSON:**
+Borra carrito de usuario con id
 
-```json
-{
-    "usuario_id": 1,
-    "producto_id": 3,
-    "cantidad": 5
-}
-```
+**Respuesta exitosa:** `204 No Content`
 
-Los tres campos son obligatorios y se validan antes de realizar la actualización.
 
-**Respuesta exitosa:** `200 OK`
-
-Devuelve el registro actualizado.
-
-### Eliminar un carrito
+### Eliminar producto id de carrito de usuario id
 
 ```http
 DELETE http://127.0.0.1:8000/api/v1/carritos/{usuario_id}/productos/{producto_id}
@@ -811,23 +856,33 @@ DELETE http://127.0.0.1:8000/api/v1/carritos/{usuario_id}/productos/{producto_id
 
 **Respuesta exitosa:**
 
-```json
-{
-    "message": "Producto de Carrito eliminado"
-}
-```
+Código HTTP: `204 No Content`.
 
-Si no existe:
+Si no existe el producto en el carrito:
 
 ```json
 {
-    "message": "Carrito no encontrado"
+    "message": "El producto no está en el carrito del usuario."
 }
 ```
 
 Código HTTP: `404 Not Found`.
 
+Si no existe usuario:
+
+```json
+{
+    "message": "Recurso no encontrado",
+    "status": 404,
+    "errors": {
+        "error": "No query results for model [App\\Models\\Usuario] 45"
+    }
+}
+```
+
 ---
+
+
 
 # 📋 Resumen de endpoints
 
@@ -850,42 +905,12 @@ Código HTTP: `404 Not Found`.
 | Usuarios | DELETE | `/api/v1/usuarios/{id}` | Eliminar |
 | Carrito | GET | `/api/v1/carritos` | Listar |
 | Carrito | GET | `/api/v1/carritos/{usuario_id}` | Obtener |
-| Carrito | POST | `/api/v1/carritos` | Crear |
-| Carrito | PUT | `/api/v1/carritos/{usuario_id}/productos/{producto_id}` | Actualizar un producto|
-| Carrito | PUT | `/api/v1/carritos/{usuario_id}` | Actualizar |
+| Carrito | POST | `/api/v1/carritos` | Crear o Actualizar Carrito / item |
 | Carrito | DELETE | `/api/v1/carritos/{usuario_id}/productos/{producto_id}` | Eliminar un producto|
-| Carrito | DELETE | `/api/v1/carritos/{id}` | Eliminar |
+| Carrito | DELETE | `/api/v1/carritos/{id}` | Vaciar Carrito |
 
 Las rutas anteriores corresponden a las definidas actualmente en `routes/api.php` del proyecto.
 
-## 🧪 Ejemplo de prueba
-
-Por ejemplo, para consultar las categorías desde un cliente como Postman:
-
-```http
-GET http://127.0.0.1:8000/api/categorias
-Accept: application/json
-```
-
-Para crear una categoría:
-
-```http
-POST http://127.0.0.1:8000/api/categorias
-Content-Type: application/json
-Accept: application/json
-```
-
-Body:
-
-```json
-{
-    "nombre": "Electrónica",
-    "slug": "electronica",
-    "descripcion": "Productos electrónicos"
-}
-```
-
-La API procesa la petición mediante la ruta correspondiente, ejecuta el método del controlador y devuelve una respuesta JSON.
 
 ## ⚠️ Validaciones y errores
 
