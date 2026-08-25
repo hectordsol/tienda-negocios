@@ -16,8 +16,8 @@
 - ✅ Implementación de CRUD completo Producto, Categoría, Usuario, Carrito
 - ✅ Vistas para gestión de productos con rutas (routes/api.php)
 - ✅ Validar datos con Requests
+- ✅ Diseñar en Productos DTO (Data Transfer Object) con Productos y Carritos
 - ✅ Busquedas personalizadas
-- ✅ Diseñar en Productos DTO (Data Transfer Object)
 
 
 ### 🔄 Próximos Pasos
@@ -43,6 +43,10 @@
 ```text
 tienda-negocios/
 ├── app/
+│   ├── DTO
+│   │   ├── CarritoDTO.php
+│   │   ├── CarritoitemDTO.php
+│   │   └── ProductoDTO.php
 │   ├── Http/
 │   │   └── Controllers/
 │   │       ├──Api
@@ -61,7 +65,9 @@ tienda-negocios/
 │   │       │   ├── UpdateProductoRequest.php
 │   │       │   └── UpdateUsuarioRequest.php
 │   │       └── Resources/
-│   │           └──ProductoResource.php
+│   │           ├── CarritoResource.php
+│   │           ├── CarritoitemResource.php
+│   │           └── ProductoResource.php
 │   ├── Models/
 │   │   ├── Carrito.php
 │   │   ├── Carritoitem.php
@@ -71,6 +77,8 @@ tienda-negocios/
 │   ├── Providers/
 │   │   └── AppServiceProvider.php
 │   └── Services/
+│       ├── CarritoService.php
+│       ├── CarritoitemService.php
 │       └── ProductoService.php
 ├── database/
 │   ├── migrations/
@@ -937,6 +945,142 @@ con código HTTP `404 Not Found`, utilizando mensajes específicos para cada ent
 | `204 Deleted` | Registro borrado correctamente |
 | `404 Not Found` | Recurso solicitado inexistente |
 | `422 Unprocessable Entity` | Datos enviados que no superan la validación |
+
+# 🔍 Búsquedas Personalizadas
+Los endpoints de Productos y Categorías permiten filtrar resultados mediante un parámetro de consulta ?nombre= para buscar coincidencias parciales en el campo nombre.
+
+# 📦 Productos - Búsqueda por nombre
+
+## Obtener productos filtrados por nombre
+
+```http
+GET /api/v1/productos?nombre={texto_busqueda}
+```
+
+Parámetros de consulta (Query String):
+
+| Parámetro | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| nombre | string | No | Texto a buscar en el campo nombre del producto. La búsqueda es insensible a mayúsculas/minúsculas y encuentra coincidencias parciales (contiene el texto). |
+
+Ejemplos:
+
+Buscar productos que contengan "laptop" en su nombre:
+
+```http
+GET /api/v1/productos?nombre=laptop
+```
+Buscar productos que contengan "mouse" (sin importar mayúsculas):
+
+```http
+GET /api/v1/productos?nombre=MOUSE
+```
+Obtener todos los productos (sin filtro):
+
+```http
+GET /api/v1/productos
+```
+
+**Respuesta exitosa:**
+
+Código HTTP: `200 OK`.
+
+```json
+[
+    {
+        "id": 1,
+        "nombre": "Laptop Gamer",
+        "descripcion": "Notebook para gaming de alto rendimiento",
+        "precio": 850.00,
+        "stock": 10,
+        "categoria_id": 1
+    },
+    {
+        "id": 2,
+        "nombre": "Laptop Oficina",
+        "descripcion": "Notebook para trabajo diario",
+        "precio": 450.00,
+        "stock": 15,
+        "categoria_id": 1
+    }
+]
+```
+Respuesta cuando no hay coincidencias: 200 OK
+
+```json
+[]
+```
+Comportamiento:
+
+Si no se envía el parámetro nombre, devuelve todos los productos.
+
+Si se envía con un texto, devuelve los productos cuyo nombre contenga ese texto (sin distinción entre mayúsculas y minúsculas).
+
+# 🏷️ Categorías - Búsqueda por nombre
+
+## Obtener categorías filtradas por nombre
+
+```http
+GET /api/v1/categorias?nombre={texto_busqueda}
+```
+
+Parámetros de consulta (Query String):
+
+| Parámetro | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| nombre | string | No | Texto a buscar en el campo nombre del producto. La búsqueda es insensible a mayúsculas/minúsculas y encuentra coincidencias parciales (contiene el texto). |
+
+Ejemplos:
+
+Buscar categorías que contengan "electrónica" en su nombre:
+
+```http
+GET /api/v1/categorias?nombre=electronica
+```
+Buscar categorías que contengan "hogar":
+
+```http
+GET /api/v1/categorias?nombre=hogar
+```
+Obtener todas las categorías (sin filtro):
+
+```http
+GET /api/v1/categorias
+```
+Respuesta exitosa: 200 OK
+
+```json
+[
+    {
+        "id": 1,
+        "nombre": "Electrónica",
+        "slug": "electronica",
+        "descripcion": "Productos electrónicos y tecnología"
+    },
+    {
+        "id": 2,
+        "nombre": "Electrodomésticos",
+        "slug": "electrodomesticos",
+        "descripcion": "Artefactos para el hogar"
+    }
+]
+```
+Respuesta cuando no hay coincidencias: 200 OK
+
+```json
+[]
+```
+Comportamiento:
+
+Si no se envía el parámetro nombre, devuelve todas las categorías.
+
+Si se envía con un texto, devuelve las categorías cuyo nombre contenga ese texto (sin distinción entre mayúsculas y minúsculas).
+
+# 📋 Resumen de Endpoints con Búsqueda
+| Recurso | Método | Endpoint | Parámetro | Descripción |
+|---|---|---|---|---|
+| Productos | GET | `/api/v1/productos` | ?nombre= | Listar productos (con o sin filtro) |
+| Categorias | GET | `/api/v1/categorias` | ?nombre= | Listar productos (con o sin filtro) |
 
 
 ## 👨‍💻 Desarrollador
