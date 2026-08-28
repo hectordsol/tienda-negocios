@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CarritoController;
 use App\Http\Controllers\Api\V1\CategoriaController;
 use App\Http\Controllers\Api\V1\ProductoController;
@@ -12,11 +13,16 @@ Route::get('/usuarios', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('v1')->group(function () {
-    Route::apiResource('categorias', CategoriaController::class);
-    Route::apiResource('productos', ProductoController::class);
+    Route::apiResource('categorias', CategoriaController::class)->middleware('throttle:10,1')->middleware('auth:api')->middleware('admin');
+    Route::apiResource('productos', ProductoController::class)->middleware('throttle:10,1')->middleware('auth:api')->middleware('admin');
     Route::apiResource('usuarios', UsuarioController::class);
-    Route::get('/carritos/{usuario}', [CarritoController::class, 'show']);
-    Route::delete('/carritos/{usuario}', [CarritoController::class, 'delete']);
-    Route::delete('/carritos/{usuario}/productos/{producto}', [CarritoController::class, 'destroy']);
-    Route::apiResource('carritos', CarritoController::class);
+    Route::get('/carritos', [CarritoController::class, 'index']);
+    Route::get('/carritos', [CarritoController::class, 'show']);
+    Route::delete('/carritos', [CarritoController::class, 'destroy']);
+    Route::delete('/carritos/items/{producto}', [CarritoController::class, 'delete']);
+    Route::post('/carritos', [CarritoController::class, 'store']);
+
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::get('/profile', [AuthController::class, 'profile'])->middleware('auth:api');
 });

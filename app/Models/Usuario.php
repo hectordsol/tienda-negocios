@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
 #[Fillable(['nombre', 'apellido', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
-class Usuario extends Authenticatable
+class Usuario extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -27,6 +28,7 @@ class Usuario extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'isadmin' => 'boolean',
         ];
     }
 
@@ -38,5 +40,15 @@ class Usuario extends Authenticatable
     public function carritoItems()
     {
         return $this->hasManyThrough(Carritoitem::class, Carrito::class, 'usuario_id', 'carrito_id');
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }
