@@ -29,5 +29,6 @@ Route::prefix('v1')->middleware('throttle:10,1')->group(function () {
         Route::delete('/', [CarritoController::class, 'destroy']);
         Route::delete('/items/{carritoitem}', [CarritoController::class, 'delete']);
         Route::post('/', [CarritoController::class, 'store']);
+        Route::post('/checkout', [CarritoController::class, 'checkout']);
     });
 });
