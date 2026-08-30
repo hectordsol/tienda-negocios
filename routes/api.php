@@ -12,17 +12,19 @@ Route::get('/usuarios', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::prefix('v1')->group(function () {
-    Route::apiResource('categorias', CategoriaController::class)->middleware('throttle:10,1')->middleware('auth:api')->middleware('admin');
-    Route::apiResource('productos', ProductoController::class)->middleware('throttle:10,1')->middleware('auth:api')->middleware('admin');
+Route::prefix('v1')->middleware('throttle:10,1')->group(function () {
+    Route::apiResource('categorias', CategoriaController::class)->middleware(['auth:api','admin']);
+    Route::apiResource('productos', ProductoController::class)->middlewareFor(['store','update','destroy'],['auth:api','admin']);
     Route::apiResource('usuarios', UsuarioController::class);
-    Route::get('/carritos', [CarritoController::class, 'index']);
-    Route::get('/carritos', [CarritoController::class, 'show']);
-    Route::delete('/carritos', [CarritoController::class, 'destroy']);
-    Route::delete('/carritos/items/{producto}', [CarritoController::class, 'delete']);
-    Route::post('/carritos', [CarritoController::class, 'store']);
 
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::get('/profile', [AuthController::class, 'profile'])->middleware('auth:api');
+
+    Route::middleware('auth:api')->prefix('carrito')->group(function (){
+        Route::get('/', [CarritoController::class, 'index']);
+        Route::delete('/', [CarritoController::class, 'destroy']);
+        Route::delete('/items/{carritoitem}', [CarritoController::class, 'delete']);
+        Route::post('/', [CarritoController::class, 'store']);
+    });
 });

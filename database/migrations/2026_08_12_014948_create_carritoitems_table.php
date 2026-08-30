@@ -22,7 +22,7 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->integer('cantidad')->default(1);
             $table->decimal('precio_unitario', 8, 2)->nullable();
-            $table->unique('usuario_id', 'producto_id');
+            $table->unique(['carrito_id', 'producto_id']);
         });
     }
 
