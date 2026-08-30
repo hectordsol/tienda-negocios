@@ -26,7 +26,7 @@ class StoreUsuarioRequest extends FormRequest
             'nombre' => ['required', 'string', 'max:255'],
             'apellido' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:usuarios'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
     }
 
@@ -47,6 +47,7 @@ class StoreUsuarioRequest extends FormRequest
             'password.required' => 'La contraseña es obligatoria.',
             'password.string' => 'La contraseña debe ser una cadena de texto.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed' => 'Debe ingreser nuevamente la misma contraseña',
         ];
     }
 }
