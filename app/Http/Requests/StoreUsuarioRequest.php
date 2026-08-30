@@ -27,6 +27,11 @@ class StoreUsuarioRequest extends FormRequest
             'apellido' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:usuarios'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'telefono' => ['nullable', 'string', 'max:255'],
+            'direccion' => ['nullable', 'string', 'max:255'],
+            'ciudad' => ['nullable', 'string', 'max:255'],
+            'codigo_postal' => ['nullable', 'string', 'max:255'],
+            'pais' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -47,7 +52,17 @@ class StoreUsuarioRequest extends FormRequest
             'password.required' => 'La contraseña es obligatoria.',
             'password.string' => 'La contraseña debe ser una cadena de texto.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
-            'password.confirmed' => 'Debe ingreser nuevamente la misma contraseña',
+            'password.confirmed' => 'Debe ingresar nuevamente la misma contraseña.',
+            'telefono.string' => 'El teléfono debe ser una cadena de texto.',
+            'telefono.max' => 'El teléfono no debe exceder los 255 caracteres.',
+            'direccion.string' => 'La dirección debe ser una cadena de texto.',
+            'direccion.max' => 'La dirección no debe exceder los 255 caracteres.',
+            'ciudad.string' => 'La ciudad debe ser una cadena de texto.',
+            'ciudad.max' => 'La ciudad no debe exceder los 255 caracteres.',
+            'codigo_postal.string' => 'El código postal debe ser una cadena de texto.',
+            'codigo_postal.max' => 'El código postal no debe exceder los 255 caracteres.',
+            'pais.string' => 'El país debe ser una cadena de texto.',
+            'pais.max' => 'El país no debe exceder los 255 caracteres.',
         ];
     }
 }

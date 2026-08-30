@@ -102,3 +102,45 @@ it('deletes the active cart of the authenticated user', function () {
 
     expect($usuario->fresh()->carrito()->exists())->toBeFalse();
 });
+
+it('checks out the active cart and returns the order summary', function () {
+    $usuario = Usuario::create([
+        'nombre' => 'Nora',
+        'apellido' => 'Fernández',
+        'email' => 'nora@example.com',
+        'password' => bcrypt('secret123'),
+    ]);
+
+    $carrito = Carrito::create([
+        'usuario_id' => $usuario->id,
+        'estado' => 'activo',
+    ]);
+
+    $producto = Producto::create([
+        'nombre' => 'Mouse',
+        'descripcion' => 'Mouse gamer',
+        'precio' => 4500.00,
+        'stock' => 10,
+    ]);
+
+    Carritoitem::create([
+        'carrito_id' => $carrito->id,
+        'producto_id' => $producto->id,
+        'cantidad' => 2,
+        'precio_unitario' => 4500.00,
+    ]);
+
+    $response = $this->actingAs($usuario, 'api')
+        ->postJson('/api/v1/carrito/checkout');
+
+    $response->assertOk()
+        ->assertJsonPath('resumen.SUBTOTAL', 9000)
+        ->assertJsonPath('resumen.IMPUESTO', 1890)
+        ->assertJsonPath('resumen.GASTOS_DE_ENVIO', 5000)
+        ->assertJsonPath('resumen.TOTAL', 15890);
+
+    $producto->refresh();
+
+    expect($producto->stock)->toBe(8)
+        ->and($carrito->fresh()->estado)->toBe('finalizado');
+});
