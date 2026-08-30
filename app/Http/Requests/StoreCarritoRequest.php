@@ -41,14 +41,15 @@ class StoreCarritoRequest extends FormRequest
      */
     public function rules(): array
     {
+        $usuarioId = auth('api')->user()?->id ?? 0;
+
         return [
-            'usuario_id' => ['required', 'exists:usuarios,id'],
             'producto_id' => [
                 'required',
-                Rule::exists('productos', 'id')->where(function ($query): void {
+                Rule::exists('productos', 'id')->where(function ($query) use ($usuarioId): void {
                     $cantidadEnCarrito = Carritoitem::query()
-                        ->whereHas('carrito', function ($carritoQuery): void {
-                            $carritoQuery->where('usuario_id', $this->input('usuario_id'))
+                        ->whereHas('carrito', function ($carritoQuery) use ($usuarioId): void {
+                            $carritoQuery->where('usuario_id', $usuarioId)
                                 ->where('estado', 'activo');
                         })
                         ->where('producto_id', $this->input('producto_id'))
@@ -66,8 +67,6 @@ class StoreCarritoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'usuario_id.required' => 'El campo usuario_id es obligatorio.',
-            'usuario_id.exists' => 'El usuario especificado no existe.',
             'producto_id.required' => 'El campo producto_id es obligatorio.',
             'producto_id.exists' => 'El producto no existe o no tiene stock suficiente.',
             'cantidad.required' => 'El campo cantidad es obligatorio.',

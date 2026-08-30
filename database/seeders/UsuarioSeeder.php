@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Usuario;
+use Illuminate\Database\Seeder;
 
 class UsuarioSeeder extends Seeder
 {
@@ -16,22 +15,23 @@ class UsuarioSeeder extends Seeder
         // Aquí puedes agregar la lógica para crear usuarios de ejemplo
         // Por ejemplo, puedes usar el modelo User para crear usuarios
         Usuario::create([
-            'nombre' => 'Usuario de ejemplo1',
+            'nombre' => 'Usuario1',
             'apellido' => 'Apellido de ejemplo1',
             'email' => 'usuario1@example.com',
-            'password' => bcrypt('password'), 
+            'password' => bcrypt('password'),
+            'isadmin' => true,
         ]);
         Usuario::create([
-            'nombre' => 'Usuario de ejemplo2',
+            'nombre' => 'Usuario2',
             'apellido' => 'Apellido de ejemplo2',
             'email' => 'usuario2@example.com',
-            'password' => bcrypt('password'), 
+            'password' => bcrypt('password'),
         ]);
         Usuario::create([
-            'nombre' => 'Usuario de ejemplo3',
+            'nombre' => 'Usuario3',
             'apellido' => 'Apellido de ejemplo3',
             'email' => 'usuario3@example.com',
-            'password' => bcrypt('password'), 
+            'password' => bcrypt('password'),
         ]);
     }
 }

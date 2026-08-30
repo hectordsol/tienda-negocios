@@ -15,7 +15,10 @@ class CarritoitemService
             ->first();
 
         if ($item !== null) {
-            $item->update(['cantidad' => $carritoitemDTO->cantidad]);
+            $item->update([
+                'cantidad' => $carritoitemDTO->cantidad,
+                'precio_unitario' => $carritoitemDTO->precio_unitario,
+            ]);
 
             return $item->refresh();
         }

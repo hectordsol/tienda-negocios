@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->boolean('isadmin')->default(false);
             $table->timestamps();
             // 🔹 Campos para negocio
             $table->string('telefono')->nullable();

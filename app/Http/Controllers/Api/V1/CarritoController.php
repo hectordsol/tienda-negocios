@@ -6,8 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCarritoRequest;
 use App\Http\Resources\CarritoitemResource;
 use App\Http\Resources\CarritoResource;
-use App\Models\Carrito;
-use App\Models\Producto;
+use App\Models\Carritoitem;
 use App\Models\Usuario;
 use App\Services\CarritoitemService;
 use App\Services\CarritoService;
@@ -21,9 +20,23 @@ class CarritoController extends Controller
      */
     public function index(): JsonResponse
     {
-        $carritos = Carrito::with('items.producto')->get();
+        $usuario = auth('api')->user();
+        if (! $usuario instanceof Usuario) {
+            return response()->json([
+                'error' => 'No autenticado.',
+            ], 401);
+        }
 
-        return response()->json($carritos, 200);
+        $carrito = $usuario->carrito()
+            ->with('items.producto')
+            ->first();
+
+        if ($carrito === null) {
+            return response()->json([
+                'error' => 'El usuario no tiene un carrito activo.',
+            ], 404);
+        }
+        return response()->json(new CarritoResource($carrito), 200);
     }
 
     /**
@@ -33,66 +46,80 @@ class CarritoController extends Controller
         StoreCarritoRequest $request,
         CarritoService $carritoService,
         CarritoitemService $carritoitemService,
-    ) : JsonResponse 
-    {
-        $item = DB::transaction(function () use ($request, $carritoService, $carritoitemService) {
-            $carrito = $carritoService->findOrCreateCarrito(
-                (int) $request->validated('usuario_id'),
-            );
+    ): JsonResponse {
+        $usuario = auth('api')->user();
+
+        if ($usuario === null) {
+            return response()->json([
+                'message' => 'No autenticado.',
+            ], 401);
+        }
+
+        $item = DB::transaction(function () use ($request, $carritoService, $carritoitemService, $usuario) {
+            $carrito = $carritoService->findOrCreateCarrito((int) $usuario->id);
 
             return $carritoitemService->findOrCreateCarritoitem($carrito, $request->toDTO());
         });
+
         return response()->json(new CarritoitemResource($item->load('producto')), 201);
     }
 
     /**
-     * Muestra el carrito de usuario.
+     * Borra item del Carrito del usuario logueado.
      */
-    public function show(Usuario $usuario): JsonResponse
+    public function delete(Carritoitem $carritoitem): JsonResponse
     {
-        $carrito = $usuario->carrito()
-            ->with('items.producto')
+        $usuarioId = auth('api')->id();
+
+        if ($usuarioId === null) {
+            return response()->json([
+                'error' => 'No autenticado.',
+            ], 401);
+        }
+
+        $carrito = $carritoitem->carrito()
+            ->where('usuario_id', $usuarioId)
+            ->where('estado', 'activo')
             ->first();
+
+        if ($carrito === null || $carritoitem->carrito_id !== $carrito->id) {
+            return response()->json([
+                'error' => 'El item no existe en el carrito del usuario actual.',
+            ], 404);
+        }
+
+        $carritoitem->delete();
+
+        return response()->json([
+            'message' => 'item eliminado del carrito',
+        ], 204);
+    }
+
+    /**
+     * Borra el carrito activo del usuario logueado.
+     */
+    public function destroy(): JsonResponse
+    {
+        $usuario = auth('api')->user();
+
+        if (! $usuario instanceof Usuario) {
+            return response()->json([
+                'error' => 'No autenticado.',
+            ], 401);
+        }
+
+        $carrito = $usuario->carrito()->first();
 
         if ($carrito === null) {
             return response()->json([
-                'message' => 'El usuario no tiene un carrito activo.',
+                'error' => 'El usuario no tiene un carrito activo.',
             ], 404);
         }
 
-        return response()->json(new CarritoResource($carrito), 200);
-    }
-    /**
-     * Borra Carrito completo del usuario.
-     */
-    public function delete(Usuario $usuario): JsonResponse
-    {
-        $usuario->carrito()->delete();
+        $carrito->delete();
 
         return response()->json([
-            'message' => 'Carrito eliminado',
-            'usuario' => $usuario,
-        ], 204);
-    }
-    /**
-     * Borra un producto de un usuario.
-     */
-    public function destroy(Usuario $usuario, Producto $producto): JsonResponse
-    {
-        $item = $usuario->carritoItems()
-            ->whereBelongsTo($producto, 'producto')
-            ->first();
-
-        if ($item === null) {
-            return response()->json([
-                'message' => 'El producto no está en el carrito del usuario.',
-            ], 404);
-        }
-
-        $item->delete();
-
-        return response()->json([
-            'message' => 'Producto de Carrito eliminado',
+            'message' => 'Carrito eliminado con éxito.',
         ], 204);
     }
 }
