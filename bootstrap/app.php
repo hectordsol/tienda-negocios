@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\IsAdmin;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -29,6 +30,25 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $exceptions->render(
+            function(
+                AuthenticationException $exception, 
+                Request $request
+            )
+            {
+            if (!$request->is('api/*'))
+                {
+                return null;
+                }
+            return response()->json([
+                'message' => 'no autenticado',
+                'status' => 401,
+                'errors' => (object) [],
+            ],401);
+            }
+        );
+
         $exceptions->render(function (NotFoundHttpException $exception, Request $request) {
             if (! $request->is('api/*')) {
                 return null;

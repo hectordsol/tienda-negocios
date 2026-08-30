@@ -15,11 +15,14 @@ Route::get('/usuarios', function (Request $request) {
 Route::prefix('v1')->middleware('throttle:10,1')->group(function () {
     Route::apiResource('categorias', CategoriaController::class)->middleware(['auth:api','admin']);
     Route::apiResource('productos', ProductoController::class)->middlewareFor(['store','update','destroy'],['auth:api','admin']);
-    Route::apiResource('usuarios', UsuarioController::class);
+    Route::apiResource('usuarios', UsuarioController::class)->middleware(['auth:api','admin']);
 
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
-    Route::get('/profile', [AuthController::class, 'profile'])->middleware('auth:api');
+    Route::middleware('auth:api')->group(function () {
+        Route::put('/profile', [AuthController::class, 'update']);
+        Route::get('/profile', [AuthController::class, 'profile']);
+    });
 
     Route::middleware('auth:api')->prefix('carrito')->group(function (){
         Route::get('/', [CarritoController::class, 'index']);

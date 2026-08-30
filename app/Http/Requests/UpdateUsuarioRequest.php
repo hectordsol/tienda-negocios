@@ -26,7 +26,12 @@ class UpdateUsuarioRequest extends FormRequest
             'nombre' => ['sometimes', 'string', 'max:255'],
             'apellido' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'string', 'email', 'max:255', 'unique:usuarios,email,'.$this->route('usuario')->id],
-            'password' => ['sometimes', 'string', 'min:8'],
+            'password' => ['sometimes', 'string', 'min:8', 'confirmed'],
+            'telefono' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'direccion' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'ciudad' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'codigo_postal' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'pais' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 
@@ -43,6 +48,17 @@ class UpdateUsuarioRequest extends FormRequest
             'email.unique' => 'El correo electrónico ya está en uso.',
             'password.string' => 'La contraseña debe ser una cadena de texto.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed' => 'Debe ingresar nuevamente la misma contraseña.',
+            'telefono.string' => 'El teléfono debe ser una cadena de texto.',
+            'telefono.max' => 'El teléfono no debe exceder los 255 caracteres.',
+            'direccion.string' => 'La dirección debe ser una cadena de texto.',
+            'direccion.max' => 'La dirección no debe exceder los 255 caracteres.',
+            'ciudad.string' => 'La ciudad debe ser una cadena de texto.',
+            'ciudad.max' => 'La ciudad no debe exceder los 255 caracteres.',
+            'codigo_postal.string' => 'El código postal debe ser una cadena de texto.',
+            'codigo_postal.max' => 'El código postal no debe exceder los 255 caracteres.',
+            'pais.string' => 'El país debe ser una cadena de texto.',
+            'pais.max' => 'El país no debe exceder los 255 caracteres.',
         ];
     }
 }
