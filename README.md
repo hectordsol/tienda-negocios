@@ -176,8 +176,7 @@ http://127.0.0.1:8000
 La API de Tienda de Negocios está definida en el archivo routes/api.php y sigue el estándar RESTful. Todas las rutas devuelven respuestas en formato JSON.
 
 Convenciones Generales
-Base URL: http://localhost:8000/api/v1
-
+Base URL: http://localhost:8000/api/v1 {{url_base}}
 Formato de Respuesta: JSON.
 
 Códigos de Estado: Se utilizan los estándares HTTP (200 OK, 201 Creado, 204 eliminado OK, 404 No Encontrado, 422 Error de Validación, etc.).
@@ -202,32 +201,341 @@ La respuesta de la API se devuelve en formato **JSON**.
 Durante el desarrollo local:
 
 ```text
-http://127.0.0.1:8000/api/v1
+http://127.0.0.1:8000/api/v1 llamaremos {{url_base}}
 ```
 
 Por ejemplo:
 
 ```text
-GET http://127.0.0.1:8000/api/v1/categorias
+GET {{url_base}}/productos
 ```
+Esta ruta no está protegida por lo que cualquier ususario pueda ver una lista de productos ordenado por id, o para ser manipulada y filtrada:
+```json
+[
+    {
+        "id": 1,
+        "nombre": "Producto1",
+        "descripcion": "Descripción del producto de ejemplo1",
+        "precio": 19.99,
+        "disponible": true,
+        "actualizado": "28-08-2026 04:08:04",
+        "categoria_id": 1
+    },
+    {
+        "id": 2,
+        "nombre": "Producto2",
+        "descripcion": "Descripción del producto de ejemplo2",
+        "precio": 19.99,
+        "disponible": true,
+        "actualizado": "28-08-2026 04:08:04",
+        "categoria_id": 1
+    },
+    ...
+
+    {
+        "id": 15,
+        "nombre": "Producto de ejemplo18",
+        "descripcion": "Descripción del producto de ejemplo18",
+        "precio": 12,
+        "disponible": true,
+        "actualizado": "28-08-2026 19:01:48",
+        "categoria_id": 7
+    }
+]
+```
+Lo mismo para
+```text
+GET {{url_base}}/productos/1
+
+```
+Para consultar un producto que devuelve:
+```json
+    {
+        "id": 1,
+        "nombre": "Producto1",
+        "descripcion": "Descripción del producto de ejemplo1",
+        "precio": 19.99,
+        "disponible": true,
+        "actualizado": "28-08-2026 04:08:04",
+        "categoria_id": 1
+    }
+```
+
+
+# 🔐 Autenticación con JWT (JSON Web Tokens)
+
+La API utiliza JWT (JSON Web Tokens) para manejar la autenticación de usuarios de manera segura y sin estado. A diferencia de las sesiones tradicionales, el servidor no guarda el estado de la sesión del usuario; toda la información necesaria está contenida en el propio token.
+
+## 📦 Dependencia Principal
+El proyecto utiliza el paquete 'php-open-source-saver/jwt-auth' para la implementación de JWT en Laravel.
+
+"php-open-source-saver/jwt-auth": "^2.9"
+
+```bash
+composer require tymon/jwt-auth
+```
+
+## 📋 Estructura del Token JWT
+Un token JWT está compuesto por tres partes codificadas en Base64, separadas por puntos (.):
+
+```text
+[HEADER].[PAYLOAD].[SIGNATURE]
+```
+
+### 1. HEADER (Encabezado)
+Contiene el tipo de token y el algoritmo de firma utilizado.
+
+```json
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+```
+
+### 2. PAYLOAD (Cuerpo)
+Contiene los claims (declaraciones) sobre el usuario y metadatos del token. En nuestro proyecto, el payload incluye:
+
+
+| Claim | Descripción | Ejemplo |
+|---|---|---|
+| `sub` (Subject) | Identificador del usuario (su ID) | 1 |
+| `iat` (Issued At) | Momento en que se emitió el token (timestamp) | 1692892800 |
+| `exp` (Expiration | Time) Momento en que el token expira (timestamp) | 1692896400 |
+| `nbf` (Not Before) | Momento a partir del cual el token es válido | 1692892800 |
+| `jti` (JWT ID) | Identificador único del token | f8d5e6a... |
+| `user_data` (Opcional) | Datos básicos del usuario (para evitar consultas) | { "email": "juan@example.com" } |
+
+Ejemplo de Payload decodificado:
+
+```json
+{
+  "sub": 1,
+  "iat": 1692892800,
+  "exp": 1692896400,
+  "nbf": 1692892800,
+  "jti": "f8d5e6a9-8b5c-4a3d-9e2f-1a2b3c4d5e6f",
+  "user_data": {
+    "id": 1,
+    "email": "juan@example.com",
+    "nombre": "Juan Pérez"
+  }
+}
+```
+
+### 3. SIGNATURE (Firma)
+La firma se genera combinando el header y el payload codificados con una clave secreta (JWT_SECRET en el archivo .env). Asegura que el token no haya sido alterado.
+
+```text
+HMACSHA256(
+  base64UrlEncode(header) + "." + base64UrlEncode(payload),
+  secret
+)
+```
+
+## 🔄 Ciclo de Vida del Token
+El ciclo de vida de un token JWT en la aplicación sigue los siguientes pasos:
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant C as Cliente (Frontend)
+    participant A as API (Laravel)
+    
+    U->>C: Ingresa credenciales
+    C->>A: POST /api/v1/login
+    A->>A: Valida credenciales
+    A->>A: Genera JWT
+    A-->>C: Devuelve token (access_token)
+    C->>C: Almacena token (localStorage/Session)
+    
+    loop Cada solicitud protegida
+        C->>A: POST /api/v1/productos (Header: Authorization: Bearer <token>)
+        A->>A: Valida firma y expiración
+        A->>A: Identifica usuario
+        A-->>C: Devuelve datos
+    end
+    
+    U->>C: Cierra sesión
+    C->>A: POST /api/v1/logout
+    A->>A: Invalida token (opcional)
+    A-->>C: Confirmación
+```
+
+
+## 1. Emisión (Firma y Verificación Inicial)
+Endpoint: `POST /api/v1/login`
+
+Proceso:
+
+El usuario envía sus credenciales (email y password) al endpoint de login.
+
+El controlador valida las credenciales contra la base de datos.
+
+Si son correctas, se genera un nuevo JWT usando la clave secreta del servidor.
+
+El token se devuelve al cliente en la respuesta.
+
+Ejemplo de Petición:
+
+```http
+POST {{url_base}}/login
+Content-Type: application/json
+
+{
+    "email": "juan@example.com",
+    "password": "12345678"
+}
+```
+
+Ejemplo de Respuesta Exitosa:
+
+```json
+{
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "token_type": "bearer",
+    "expires_in": 3600
+}
+```
+
+Ejemplo de Respuesta con credenciales erroneas:
+
+```json
+{
+    "message": "Las credenciales no son válidas."
+}
+```
+## 2. Almacenamiento en Cliente
+El cliente (frontend) debe almacenar el token de forma segura. Las opciones comunes son:
+
+- Almacenamiento en memoria: Para aplicaciones SPA.
+
+- localStorage/sessionStorage: Fácil de implementar pero vulnerable a XSS.
+
+- Cookies con flag HttpOnly: Más seguras contra XSS.
+
+- Recomendación: Para APIs, usar el header Authorization con el token.
+
+## 3. Verificación en Solicitudes Protegidas
+Para acceder a rutas protegidas, el cliente debe incluir el token en el header de autorización:
+
+```http
+GET {{url_base}}/productos
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+```
+
+Proceso de Verificación en el Servidor (Middleware):
+
+- El middleware jwt.auth intercepta la solicitud.
+
+- Extrae el token del header Authorization.
+
+- Verifica la firma del token usando JWT_SECRET.
+
+- Comprueba que el token no haya expirado (revisa el claim exp).
+
+- Si es válido, decodifica el payload y asocia el usuario a la solicitud.
+
+- Si falla, devuelve un error 401 Unauthorized.
+
+## 4. Expiración
+Los tokens tienen un tiempo de vida limitado para reducir el riesgo de robo. La expiración se controla con el claim exp.
+
+- Tiempo de expiración predeterminado: 1 hora (3600 segundos).
+
+- Configurable en: config/jwt.php (ttl).
+
+- Comportamiento al expirar: El cliente recibe un error 401 Unauthorized y debe solicitar un nuevo token (refrescar o volver a autenticar).
+
+
+## 5. Invalidación (Logout)
+El cierre de sesión puede manejar la invalidación del token de dos maneras:
+
+- Invalidación en servidor: Se añade el token a una "lista negra" (blacklist) hasta que expire.
+
+- Invalidación en cliente: El cliente simplemente elimina el token de su almacenamiento local.
+
+- Endpoint: POST {{url_base}}/logout
+
+Proceso:
+
+- El cliente envía la solicitud con el token actual.
+
+- El servidor invalida el token añadiéndolo a la blacklist (opcional).
+
+- El cliente debe eliminar el token localmente.
+
+Ejemplo:
+
+```http
+POST {{url_base}}/logout
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+```
+Respuesta:
+
+```json
+{
+    "message": "Sesión cerrada exitosamente"
+}
+```
+
+# 🛡️ Seguridad y Buenas Prácticas
+
+## Configuración de Clave Secreta. 
+
+La clave JWT_SECRET en el archivo .env es fundamental para la firma de tokens. Debe ser única y mantenerse en secreto.
+
+```env
+JWT_SECRET=tu_clave_secreta_unica_y_larga
+```
+Generación:
+
+```bash
+php artisan jwt:secret
+```
+
+## Algoritmo de Firma
+Por defecto, se utiliza HS256 (firma simétrica con clave secreta). Para entornos productivos, se recomienda usar algoritmos asimétricos como RS256.
+
+## Claims Personalizados
+Se pueden agregar claims adicionales al payload, como datos básicos del usuario, para evitar consultas adicionales a la base de datos en cada solicitud.
+
+# 📚 Endpoints de Autenticación (Propuestos)
+
+| Método | Endpoint | Descripción | Protección
+|---|---|---|---|
+| POST | {{url_base}}/login | Iniciar sesión y obtener token | Público |
+| POST | {{url_base}}/register | Registrar nuevo usuario | Público |
+| POST | {{url_base}}/logout | Cerrar sesión (invalidar token) | Privado (Bearer) |
+| GET | {{url_base}}/profile | Obtener datos del usuario autenticado | Privado (Bearer) |
+| PUT | {{url_base}}/profile | Actualizar datos del usuario autenticado | Privado (Bearer) |
 
 ---
 
-# 🏷️ Categorías
+# 🏷️ Categorías - Usuario (CRUD disponible solo para administrador)
 
-Las categorías permiten clasificar los productos de la tienda.
+Las categorías permiten clasificar los productos de la tienda. Las rutas que manejan la información de las categorías de los productos están protegidas para que solo pueda manejarla si es usuario administrador. También la ruta para administrar usuarios desde un usuario administrador.
 
-### Obtener todas las categorías
+### Obtener todas las categorías o usuarios
 
 ```http
-GET http://127.0.0.1:8000/api/v1/categorias
+GET {{url_base}}/categorias
+GET {{url_base}}/usuarios
 ```
+
 
 **Parámetros:** ninguno.
 
 **Controlador:** `CategoriaController@index`
 
-**Respuesta exitosa:**
+**Cualquier acción en estas rutas si un administrador no se logueó debería enviar:**
+
+```json
+{
+    "message": "no autenticado",
+    "status": 401,
+    "errors": {}
+}
+```
+**Respuesta exitosa si es administrador Categorías envía:**
 
 ```json
 [
@@ -235,17 +543,38 @@ GET http://127.0.0.1:8000/api/v1/categorias
         "id": 1,
         "nombre": "Electrónica",
         "slug": "electronica",
-        "descripcion": "Productos electrónicos"
+        "descripcion": "Productos electrónicos como teléfonos, computadoras, televisores, etc.",
+        "created_at": "2026-08-28T04:08:04.000000Z",
+        "updated_at": "2026-08-28T04:08:04.000000Z"
+    },
+    {
+        "id": 2,
+        "nombre": "Indumentaria",
+        "slug": "indumentaria",
+        "descripcion": "Ropa para hombres, mujeres y niños.",
+        "created_at": "2026-08-28T04:08:04.000000Z",
+        "updated_at": "2026-08-28T04:08:04.000000Z"
+    },
+...
+    {
+        "id": 7,
+        "nombre": "Belleza",
+        "slug": "belleza",
+        "descripcion": "Productos de belleza y cuidado personal.",
+        "created_at": "2026-08-28T04:08:04.000000Z",
+        "updated_at": "2026-08-28T04:08:04.000000Z"
     }
 ]
 ```
+**Respuesta exitosa:** `200 OK`
 
 El método obtiene todas las categorías mediante `Categoria::all()` y devuelve el resultado como JSON.
 
-### Obtener una categoría
+### Obtener una categoría o usuario
 
 ```http
-GET http://127.0.0.1:8000/api/v1/categorias/{id}
+GET http://127.0.0.1:8000/api/v1/categorias/{categoria}
+GET http://127.0.0.1:8000/api/v1/usuarios/{usuario}
 ```
 
 **Parámetros de URL:**
@@ -257,7 +586,7 @@ GET http://127.0.0.1:8000/api/v1/categorias/{id}
 Ejemplo:
 
 ```http
-GET http://127.0.0.1:8000/api/v1/categorias/1
+GET {{url_base}}/categorias/1
 ```
 
 **Respuesta exitosa:** `200 OK`
@@ -288,7 +617,7 @@ Código HTTP: `404 Not Found`.
 ### Crear una categoría
 
 ```http
-POST http://127.0.0.1:8000/api/v1/categorias
+POST {{url_base}}/categorias
 ```
 
 **Body JSON:**
@@ -311,7 +640,7 @@ POST http://127.0.0.1:8000/api/v1/categorias
 
 El `slug` debe ser único dentro de la tabla `categorias`.
 
-**Respuesta exitosa:** `201 Created`
+**Respuesta exitosa:**
 
 ```json
 {
@@ -321,11 +650,12 @@ El `slug` debe ser único dentro de la tabla `categorias`.
     "descripcion": "Productos electrónicos"
 }
 ```
+Código HTTP: `201 Created`
 
 ### Actualizar una categoría
 
 ```http
-PUT http://127.0.0.1:8000/api/v1/categorias/{id}
+PUT {{url_base}}/categorias/{categoria}
 ```
 
 **Parámetro de URL:**
@@ -367,7 +697,7 @@ Código HTTP: `404 Not Found`.
 ### Eliminar una categoría
 
 ```http
-DELETE http://127.0.0.1:8000/api/v1/categorias/{id}
+DELETE {{url_base}}/categorias/{id}
 ```
 
 **Parámetro:**
@@ -402,67 +732,12 @@ Código HTTP: `404 Not Found`.
 
 # 📦 Productos
 
-Los productos representan los artículos disponibles en la tienda.
-
-### Obtener todos los productos
-
-```http
-GET http://127.0.0.1:8000/api/v1/productos
-```
-
-**Parámetros:** ninguno.
-
-**Controlador:** `ProductoController@index`
-
-**Respuesta:** `200 OK`
-
-Devuelve un array JSON con todos los productos.
-
-### Obtener un producto
-
-```http
-GET http://127.0.0.1:8000/api/v1/productos/{id}
-```
-
-**Parámetro:**
-
-| Parámetro | Tipo | Descripción |
-|---|---|---|
-| `id` | integer | Identificador del producto |
-
-Ejemplo:
-
-```http
-GET http://127.0.0.1:8000/api/v1/productos/1
-```
-
-Si existe, devuelve el producto:
-
-```json
-{
-    "id": 1,
-    "nombre": "Notebook",
-    "descripcion": "Notebook para uso general",
-    "precio": 850000,
-    "stock": 10,
-    "categoria_id": 1
-}
-```
-
-Si no existe:
-
-```json
-{
-    "message": "Producto no encontrado"
-}
-```
-
-Código HTTP: `404 Not Found`.
+Los productos poseen 3 rutas protegidas para ser accedidas por un administrador.
 
 ### Crear un producto
 
 ```http
-POST http://127.0.0.1:8000/api/v1/productos
+POST {{url_base}}/productos
 ```
 
 **Body JSON:**
@@ -496,7 +771,7 @@ Devuelve el producto creado en formato JSON.
 ### Actualizar un producto
 
 ```http
-PUT http://127.0.0.1:8000/api/v1/productos/{producto}
+PUT {{url_base}}/productos/{producto}
 ```
 
 **Parámetro:**
@@ -508,7 +783,7 @@ PUT http://127.0.0.1:8000/api/v1/productos/{producto}
 Ejemplo:
 
 ```http
-PUT http://127.0.0.1:8000/api/v1/productos/1
+PUT {{url_base}}/productos/1
 ```
 
 **Body JSON:**
@@ -529,7 +804,7 @@ Devuelve el producto actualizado.
 ### Eliminar un producto
 
 ```http
-DELETE http://127.0.0.1:8000/api/v1/productos/{id}
+DELETE {{url_base}}/productos/{id}
 ```
 
 **Parámetro:**
@@ -558,359 +833,110 @@ Código HTTP: `404 Not Found`.
 
 ---
 
-# 👤 Usuarios
-
-Los usuarios representan las personas registradas en la aplicación.
-
-### Obtener todos los usuarios
-
-```http
-GET http://127.0.0.1:8000/api/v1/usuarios
-```
-
-**Parámetros:** ninguno.
-
-**Respuesta:** `200 OK`
-
-Devuelve el listado de usuarios en formato JSON.
-
-### Obtener un usuario
-
-```http
-GET http://127.0.0.1:8000/api/v1/usuarios/{id}
-```
-
-**Parámetro:**
-
-| Parámetro | Tipo | Descripción |
-|---|---|---|
-| `id` | integer | Identificador del usuario |
-
-Ejemplo:
-
-```http
-GET http://127.0.0.1:8000/api/v1/usuarios/1
-```
-
-Si no existe:
-
-```json
-{
-    "message": "Usuario no encontrado"
-}
-```
-
-Código HTTP: `404 Not Found`.
-
-### Crear un usuario
-
-```http
-POST http://127.0.0.1:8000/api/v1/usuarios
-```
-
-**Body JSON:**
-
-```json
-{
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "email": "juan@example.com",
-    "password": "12345678"
-}
-```
-
-**Parámetros:**
-
-| Campo | Tipo | Obligatorio | Restricciones |
-|---|---|---|---|
-| `nombre` | string | Sí | Máximo 255 caracteres |
-| `apellido` | string | Sí | Máximo 255 caracteres |
-| `email` | string | Sí | Email válido y único |
-| `password` | string | Sí | Mínimo 8 caracteres |
-
-Estas reglas están implementadas en `UsuarioController`.
-
-**Respuesta exitosa:** `201 Created`
-
-Devuelve el usuario creado en formato JSON.
-
-### Actualizar un usuario
-
-```http
-PUT http://127.0.0.1:8000/api/v1/usuarios/{id}
-```
-
-**Parámetro:**
-
-| Parámetro | Tipo | Descripción |
-|---|---|---|
-| `id` | integer | Identificador del usuario |
-
-**Body JSON:**
-
-```json
-{
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "email": "juan.perez@example.com",
-    "password": "nueva-clave"
-}
-```
-
-Los campos son validados de la misma forma que en la creación.
-
-**Respuesta exitosa:** `200 OK`
-
-Devuelve el usuario actualizado.
-
-### Eliminar un usuario
-
-```http
-DELETE http://127.0.0.1:8000/api/v1/usuarios/{id}
-```
-
-**Parámetro:**
-
-| Parámetro | Tipo | Descripción |
-|---|---|---|
-| `id` | integer | Identificador del usuario |
-
-**Respuesta exitosa:**
-
-```json
-{
-    "message": "Usuario eliminado"
-}
-```
-
-Si no existe:
-
-```json
-{
-    "message": "Usuario no encontrado"
-}
-```
-
-Código HTTP: `404 Not Found`.
-
----
-
 # 🛒 Carrito de Compras
 
 El carrito de compras permite a los usuarios seleccionar y gestionar productos antes de realizar una compra. La API permite consultar, agregar, actualizar y eliminar items del carrito.
 
 ## Estructura de Datos
 
-El carrito se compone de items, donde cada item representa un producto con una cantidad específica. Un usuario tiene un único carrito activo representado por la colección de sus items.
+El carrito se compone de items, donde cada item representa un producto con una cantidad específica. Un usuario tiene un único carrito activo representado por la colección de sus items y para acceder debe estar logueado.
 
-### Obtener todos los carritos
 
-```http
-GET http://127.0.0.1:8000/api/v1/carritos
-```
+### Obtener carrito de usuario
 
-**Parámetros:** ninguno.
-
-**Respuesta:** `200 OK`
-
-Devuelve todos los registros de todos los usuario que tengan carrito.
-
-### Obtener un carrito
 
 ```http
-GET http://127.0.0.1:8000/api/v1/carritos/{usuario_id}
+GET {{url_base}}/carritos/
 ```
 
-**Parámetro:**
-
-| Parámetro | Tipo | Descripción |
-|---|---|---|
-| `id` | integer | Identificador del carrito |
-
-Ejemplo:
-
-```http
-GET /api/carritos/1
-```
+Si no hay usuario logueado:
 
 ```json
 {
-    "usuario_id": 1,
+    "message": "no autenticado",
+    "status": 401,
+    "errors": {}
+}
+```
+Código HTTP: `401 Unauthorized`.
+
+
+Si hay usuario logueado`y no tiene carrito:
+
+```json
+{
+    "error": "El usuario no tiene un carrito activo."
+}
+```
+Código HTTP: `422 Unprocessable content`.
+
+
+Si tiene carrito:
+```json
+{
+    "usuario_id": 2,
+    "estado": "activo",
     "items": [
         {
-            "id": 1,
-            "producto_id": 5,
-            "producto_nombre": "Laptop Gamer",
-            "cantidad": 2,
-            "precio_unitario": 850.00,
-            "subtotal": 1700.00
+            "id": 11,
+            "producto_id": 1,
+            "producto_nombre": "Producto1",
+            "cantidad": 1,
+            "precio_unitario": "19.99",
+            "subtotal": 19.99
+        },
+        {
+            "id": 12,
+            "producto_id": 2,
+            "producto_nombre": "Producto2",
+            "cantidad": 1,
+            "precio_unitario": "19.99",
+            "subtotal": 19.99
         }
     ],
-    "total_items": 3,
-    "total": 2450.50
+    "total_items": 2,
+    "total": 39.98
 }
 ```
 Código HTTP: `200 OK`.
 Muestra listado de productos, con la cantidad de cada uno, y un resumen con el total de items, y precio total.
 
+### Checkout de carrito de usuario 🛒 
 ```http
-GET /api/carritos/33
+GET {{url_base}}/carrito/checkout
 ```
-Si no existe usuario:
+Si no hay usuario logueado:
 
 ```json
 {
-    "message": "Recurso no encontrado",
-    "status": 404,
-    "errors": {
-        "error": "No query results for model [App\\Models\\Usuario] 33"
-    }
+    "message": "no autenticado",
+    "status": 401,
+    "errors": {}
 }
 ```
-Código HTTP: `404 Not Found`.
-
-```http
-GET /api/carritos/3
-```
-Si existe usuario y no tiene carrito:
+Código HTTP: `401 Unauthorized`.
 
 ```json
 {
-    "message": "El usuario no tiene un carrito activo."
+    "error": "El carrito está vacío."
 }
 ```
+Código HTTP: `422 Unprocessable content`.
 
-Código HTTP: `404 Not Found`.
-
-### Crear o actualiza un Carrito, creando o actualizando el registro item (producto-cantidad) 
-
-```http
-POST http://127.0.0.1:8000/api/v1/carritos/
-```
-
-**Body JSON:**
 
 ```json
 {
-    "usuario_id": 1,
-    "producto_id": 4,
-    "cantidad": 1
-}
-```
-
-**Parámetros:**
-
-| Campo | Tipo | Obligatorio | Restricciones |
-|---|---|---|---|
-| `usuario_id` | integer | Sí | Debe existir en `usuarios` |
-| `producto_id` | integer | Sí | Debe existir en `productos` |
-| `cantidad` | integer | Sí | Mínimo 1 |
-
-Estas reglas están implementadas en `CarritoController`.
-
-**Respuesta exitosa:** `201 Created`
-
-```json
-{
-    "id": 8,
-    "producto_id": 4,
-    "producto_nombre": "Producto de ejemplo4",
-    "cantidad": 1,
-    "precio_unitario": 88.99,
-    "subtotal": 88.99
-}
-```
-
-Devuelve el registro creado en formato JSON. Si el carrito no exite lo crea, sino lo actualiza. Si el producto no existe en el carrito lo crea, sino actualiza la cantidad con el nuevo valor.
-
-Código HTTP: `201 Created`.
-
-### Vaciar un carrito de usuario id
-
-```http
-DELETE http://127.0.0.1:8000/api/v1/carritos/{usuario_id}
-```
-
-**Parámetro:**
-
-| Parámetro | Tipo | Descripción |
-|---|---|---|
-| `id` | integer | Identificador del registro usuario |
-
-Borra carrito de usuario con id
-
-**Respuesta exitosa:** `204 No Content`
-
-
-### Eliminar producto id de carrito de usuario id
-
-```http
-DELETE http://127.0.0.1:8000/api/v1/carritos/{usuario_id}/productos/{producto_id}
-```
-
-**Parámetro:**
-
-| Parámetro | Tipo | Descripción |
-|---|---|---|
-| `id` | integer | Identificador del registro |
-
-**Respuesta exitosa:**
-
-Código HTTP: `204 No Content`.
-
-Si no existe el producto en el carrito:
-
-```json
-{
-    "message": "El producto no está en el carrito del usuario."
-}
-```
-
-Código HTTP: `404 Not Found`.
-
-Si no existe usuario:
-
-```json
-{
-    "message": "Recurso no encontrado",
-    "status": 404,
-    "errors": {
-        "error": "No query results for model [App\\Models\\Usuario] 45"
+    "message": "Checkout realizado con éxito.",
+    "resumen": {
+        "SUBTOTAL": 39.98,
+        "IMPUESTO": 8.4,
+        "GASTOS_DE_ENVIO": 5000,
+        "TOTAL": 5048.38
     }
 }
 ```
 
----
-
-
-
-# 📋 Resumen de endpoints
-
-| Recurso | Método | Endpoint | Operación |
-|---|---|---|---|
-| Categorías | GET | `/api/v1/categorias` | Listar |
-| Categorías | GET | `/api/v1/categorias/{id}` | Obtener |
-| Categorías | POST | `/api/v1/categorias` | Crear |
-| Categorías | PUT | `/api/v1/categorias/{id}` | Actualizar |
-| Categorías | DELETE | `/api/v1/categorias/{id}` | Eliminar |
-| Productos | GET | `/api/v1/productos` | Listar |
-| Productos | GET | `/api/v1/productos/{id}` | Obtener |
-| Productos | POST | `/api/v1/productos` | Crear |
-| Productos | PUT | `/api/v1/productos/{producto}` | Actualizar |
-| Productos | DELETE | `/api/v1/productos/{id}` | Eliminar |
-| Usuarios | GET | `/api/v1/usuarios` | Listar |
-| Usuarios | GET | `/api/v1/usuarios/{id}` | Obtener |
-| Usuarios | POST | `/api/v1/usuarios` | Crear |
-| Usuarios | PUT | `/api/v1/usuarios/{id}` | Actualizar |
-| Usuarios | DELETE | `/api/v1/usuarios/{id}` | Eliminar |
-| Carrito | GET | `/api/v1/carritos` | Listar |
-| Carrito | GET | `/api/v1/carritos/{usuario_id}` | Obtener |
-| Carrito | POST | `/api/v1/carritos` | Crear o Actualizar Carrito / item |
-| Carrito | DELETE | `/api/v1/carritos/{usuario_id}/productos/{producto_id}` | Eliminar un producto|
-| Carrito | DELETE | `/api/v1/carritos/{id}` | Vaciar Carrito |
-
-Las rutas anteriores corresponden a las definidas actualmente en `routes/api.php` del proyecto.
-
+Código HTTP: `200 OK`.
 
 ## ⚠️ Validaciones y errores
 
