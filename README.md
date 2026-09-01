@@ -175,7 +175,8 @@ http://127.0.0.1:8000
 ## 🌐 Documentación de Rutas (API)
 La API de Tienda de Negocios está definida en el archivo routes/api.php y sigue el estándar RESTful. Todas las rutas devuelven respuestas en formato JSON.
 
-Convenciones Generales
+Convenciones Generales:
+
 Base URL: http://localhost:8000/api/v1 {{url_base}}
 Formato de Respuesta: JSON.
 
@@ -243,6 +244,8 @@ Esta ruta no está protegida por lo que cualquier ususario pueda ver una lista d
     }
 ]
 ```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
 Lo mismo para
 ```text
 GET {{url_base}}/productos/1
@@ -260,7 +263,7 @@ Para consultar un producto que devuelve:
         "categoria_id": 1
     }
 ```
-
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
 
 # 🔐 Autenticación con JWT (JSON Web Tokens)
 
@@ -321,6 +324,7 @@ Ejemplo de Payload decodificado:
   }
 }
 ```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
 
 ### 3. SIGNATURE (Firma)
 La firma se genera combinando el header y el payload codificados con una clave secreta (JWT_SECRET en el archivo .env). Asegura que el token no haya sido alterado.
@@ -362,7 +366,7 @@ sequenceDiagram
 
 
 ## 1. Emisión (Firma y Verificación Inicial)
-Endpoint: `POST /api/v1/login`
+Endpoint: `POST {{url_base}}/login`
 
 Proceso:
 
@@ -395,6 +399,7 @@ Ejemplo de Respuesta Exitosa:
     "expires_in": 3600
 }
 ```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
 
 Ejemplo de Respuesta con credenciales erroneas:
 
@@ -403,6 +408,8 @@ Ejemplo de Respuesta con credenciales erroneas:
     "message": "Las credenciales no son válidas."
 }
 ```
+**Respuesta no exitosa:** ![422 Unauthorized](https://img.shields.io/badge/404-Unauthorized-red)
+
 ## 2. Almacenamiento en Cliente
 El cliente (frontend) debe almacenar el token de forma segura. Las opciones comunes son:
 
@@ -476,7 +483,7 @@ Respuesta:
     "message": "Sesión cerrada exitosamente"
 }
 ```
-
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
 # 🛡️ Seguridad y Buenas Prácticas
 
 ## Configuración de Clave Secreta. 
@@ -535,6 +542,9 @@ GET {{url_base}}/usuarios
     "errors": {}
 }
 ```
+**Respuesta exitosa:** ![401 Unauthorized](https://img.shields.io/badge/401-Unauthorired-red)
+
+
 **Respuesta exitosa si es administrador Categorías envía:**
 
 ```json
@@ -566,7 +576,7 @@ GET {{url_base}}/usuarios
     }
 ]
 ```
-**Respuesta exitosa:** `200 OK`
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
 
 El método obtiene todas las categorías mediante `Categoria::all()` y devuelve el resultado como JSON.
 
@@ -599,6 +609,8 @@ GET {{url_base}}/categorias/1
     "descripcion": "Productos electrónicos"
 }
 ```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
 
 Si la categoría no existe:
 
@@ -611,8 +623,7 @@ Si la categoría no existe:
     }
 }
 ```
-
-Código HTTP: `404 Not Found`.
+**Respuesta no exitosa:**  ![404 Not Found](https://img.shields.io/badge/404-Not_Found-red)
 
 ### Crear una categoría
 
@@ -623,12 +634,36 @@ POST {{url_base}}/categorias
 **Body JSON:**
 
 ```json
-{
-    "nombre": "Electrónica",
-    "slug": "electronica",
-    "descripcion": "Productos electrónicos"
-}
+[
+    {
+        "id": 1,
+        "nombre": "Electrónica",
+        "slug": "electronica",
+        "descripcion": "Productos electrónicos como teléfonos, computadoras, televisores, etc.",
+        "created_at": "2026-08-28T04:08:04.000000Z",
+        "updated_at": "2026-08-28T04:08:04.000000Z"
+    },
+    {
+        "id": 2,
+        "nombre": "Indumentaria",
+        "slug": "indumentaria",
+        "descripcion": "Ropa para hombres, mujeres y niños.",
+        "created_at": "2026-08-28T04:08:04.000000Z",
+        "updated_at": "2026-08-28T04:08:04.000000Z"
+    },
+...
+    {
+        "id": 7,
+        "nombre": "Belleza",
+        "slug": "belleza",
+        "descripcion": "Productos de belleza y cuidado personal.",
+        "created_at": "2026-08-28T04:08:04.000000Z",
+        "updated_at": "2026-08-28T04:08:04.000000Z"
+    }
+]
 ```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
 
 **Parámetros:**
 
@@ -858,17 +893,19 @@ Si no hay usuario logueado:
     "errors": {}
 }
 ```
-Código HTTP: `401 Unauthorized`.
+**Respuesta no exitosa:** ![401 Unauthorized](https://img.shields.io/badge/401-Unauthorized-red)
 
 
-Si hay usuario logueado`y no tiene carrito:
+Si hay usuario logueado y no tiene carrito:
 
 ```json
 {
     "error": "El usuario no tiene un carrito activo."
 }
 ```
-Código HTTP: `422 Unprocessable content`.
+**Respuesta no exitosa:** ![422 Unprocessable content](https://img.shields.io/badge/422-Unprocessable_content-red)
+
+
 
 
 Si tiene carrito:
@@ -898,7 +935,8 @@ Si tiene carrito:
     "total": 39.98
 }
 ```
-Código HTTP: `200 OK`.
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green).
+
 Muestra listado de productos, con la cantidad de cada uno, y un resumen con el total de items, y precio total.
 
 ### Checkout de carrito de usuario 🛒 
@@ -914,14 +952,14 @@ Si no hay usuario logueado:
     "errors": {}
 }
 ```
-Código HTTP: `401 Unauthorized`.
+**Respuesta no exitosa:** ![401 Unauthorized](https://img.shields.io/badge/401-Unauthorized-red)
 
 ```json
 {
     "error": "El carrito está vacío."
 }
 ```
-Código HTTP: `422 Unprocessable content`.
+**Respuesta no exitosa:** ![422 Unprocessable content](https://img.shields.io/badge/422-Unprocessable_content-red)
 
 
 ```json
@@ -936,7 +974,7 @@ Código HTTP: `422 Unprocessable content`.
 }
 ```
 
-Código HTTP: `200 OK`.
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
 
 ## ⚠️ Validaciones y errores
 
