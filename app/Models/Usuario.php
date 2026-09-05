@@ -3,7 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
+use Database\Factories\UsuarioFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,7 +25,7 @@ use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 #[Hidden(['password', 'remember_token'])]
 class Usuario extends Authenticatable implements JWTSubject
 {
-    /** @use HasFactory<UserFactory> */
+    /** @use HasFactory<UsuarioFactory> */
     use HasFactory, Notifiable;
 
     /**
