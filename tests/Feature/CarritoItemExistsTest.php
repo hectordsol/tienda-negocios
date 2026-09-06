@@ -9,7 +9,61 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('prevents duplicate products in the same user cart', function () {
+it('devuelve solo el carrito activo', function () {
+    $usuario = Usuario::create([
+        'nombre' => 'Sofía',
+        'apellido' => 'Gómez',
+        'email' => 'sofia@example.com',
+        'password' => bcrypt('secret123'),
+    ]);
+
+    $carrito = Carrito::create([
+        'usuario_id' => $usuario->id,
+        'estado' => 'activo',
+    ]);
+
+    $this->actingAs($usuario, 'api')
+        ->getJson('/api/v1/carrito')
+        ->assertOk()
+        ->assertJsonPath('resumen.cantidad_productos', 0)
+        ->assertJsonPath('resumen.total', 0);
+
+    $carrito->update(['estado' => 'finalizado']);
+
+    $this->actingAs($usuario, 'api')
+        ->getJson('/api/v1/carrito')
+        ->assertNotFound();
+});
+
+it('crea un carrito activo nuevo si el usuario solo tiene carritos finalizados', function () {
+    $usuario = Usuario::factory()->create();
+    $carritoFinalizado = Carrito::create([
+        'usuario_id' => $usuario->id,
+        'estado' => 'finalizado',
+    ]);
+    $producto = Producto::factory()->create([
+        'stock' => 10,
+    ]);
+
+    $this->actingAs($usuario, 'api')
+        ->postJson('/api/v1/carrito', [
+            'producto_id' => $producto->id,
+            'cantidad' => 2,
+        ])
+        ->assertCreated();
+
+    $carritoActivo = Carrito::query()
+        ->where('usuario_id', $usuario->id)
+        ->where('estado', 'activo')
+        ->first();
+
+    expect($carritoActivo)->not->toBeNull()
+        ->and($carritoActivo->id)->not->toBe($carritoFinalizado->id)
+        ->and($carritoFinalizado->fresh()->estado)->toBe('finalizado')
+        ->and($carritoActivo->items()->where('producto_id', $producto->id)->value('cantidad'))->toBe(2);
+});
+
+it('evita productos duplicados en el mismo carrito de usuario', function () {
     $usuario = Usuario::create([
         'nombre' => 'Ana',
         'apellido' => 'García',
@@ -44,7 +98,7 @@ it('prevents duplicate products in the same user cart', function () {
     ]))->toThrow(QueryException::class);
 });
 
-it('rejects deleting an item that is not in the authenticated user cart', function () {
+it('rechaza la eliminación de un artículo que no se encuentra en el carrito del usuario autenticado', function () {
     $usuario = Usuario::create([
         'nombre' => 'Luis',
         'apellido' => 'Pérez',
@@ -83,7 +137,7 @@ it('rejects deleting an item that is not in the authenticated user cart', functi
         ->assertStatus(404);
 });
 
-it('deletes the active cart of the authenticated user', function () {
+it('elimina el carrito activo del usuario autenticado', function () {
     $usuario = Usuario::create([
         'nombre' => 'Carlos',
         'apellido' => 'Ruiz',
@@ -103,7 +157,7 @@ it('deletes the active cart of the authenticated user', function () {
     expect($usuario->fresh()->carrito()->exists())->toBeFalse();
 });
 
-it('checks out the active cart and returns the order summary', function () {
+it('procesa el carrito activo y devuelve el resumen del pedido', function () {
     $usuario = Usuario::create([
         'nombre' => 'Nora',
         'apellido' => 'Fernández',
@@ -134,10 +188,10 @@ it('checks out the active cart and returns the order summary', function () {
         ->postJson('/api/v1/carrito/checkout');
 
     $response->assertOk()
-        ->assertJsonPath('resumen.SUBTOTAL', 9000)
-        ->assertJsonPath('resumen.IMPUESTO', 1890)
-        ->assertJsonPath('resumen.GASTOS_DE_ENVIO', 5000)
-        ->assertJsonPath('resumen.TOTAL', 15890);
+        ->assertJsonPath('resumen.subtotal', 9000)
+        ->assertJsonPath('resumen.impuestos', 1890)
+        ->assertJsonPath('resumen.envio', 5000)
+        ->assertJsonPath('resumen.total', 15890);
 
     $producto->refresh();
 

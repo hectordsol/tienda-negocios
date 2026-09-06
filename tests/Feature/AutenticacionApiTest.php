@@ -136,25 +136,31 @@ class AutenticacionApiTest extends TestCase
 
     public function test_intento_iniciar_sesion_sin_registrar(): void
     {
+        // Preparo inicio de sesion, Arrange.
         $usuario = [
             'email' => 'ana@tienda.test',
             'password' => 'password',
         ];
+        // Intenta inicio de sesión, Act.
         $response = $this->postJson('/api/v1/login', $usuario);
 
+        // Verificar respuesta incorrecta. Assert.
         $response->assertUnauthorized();
     }
 
     public function test_persona_autenticada_vea_perfil(): void
     {
-        $user = Usuario::factory()->create();
-        $token = auth('api')->login($user);
+        $usuario = Usuario::factory()->create();
+
+        $token = auth('api')->login($usuario);
+
         $this->withToken($token)
-            ->getJson('api/v1/profile')
+            ->getJson('/api/v1/profile')
             ->assertOk()
-            ->assertJson('id')->$user->id
-            ->assertJson('email')->$user->email
-            ->assertJsonMissingPath('password')->$user->password;
+            ->assertJsonPath('id', $usuario->id)
+            ->assertJsonPath('email', $usuario->email)
+            ->assertJsonMissingPath('password');
+
     }
 
     public function test_rechazo_perfil_sin_token(): void

@@ -3,23 +3,24 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreCarritoRequest;
+use App\Http\Requests\StoreCarritoitemRequest;
 use App\Http\Resources\CarritoitemResource;
 use App\Http\Resources\CarritoResource;
-use App\Models\Carrito;
 use App\Models\Carritoitem;
 use App\Models\Usuario;
 use App\Services\CarritoitemService;
 use App\Services\CarritoService;
+use App\Services\ResumenCarritoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CarritoController extends Controller
 {
     /**
      * Muestra todos los carritos
      */
-    public function index(): JsonResponse
+    public function index(ResumenCarritoService $resumenCarritoService): JsonResponse
     {
         $usuario = auth('api')->user();
         if (! $usuario instanceof Usuario) {
@@ -29,6 +30,7 @@ class CarritoController extends Controller
         }
 
         $carrito = $usuario->carrito()
+            ->where('estado', 'activo')
             ->with('items.producto')
             ->first();
 
@@ -37,14 +39,18 @@ class CarritoController extends Controller
                 'error' => 'El usuario no tiene un carrito activo.',
             ], 404);
         }
-        return response()->json(new CarritoResource($carrito), 200);
+
+        return response()->json(new CarritoResource(
+            $carrito->items,
+            $resumenCarritoService->calcular($carrito->items),
+        ));
     }
 
     /**
      * Crea o actualiza carrito creando o actualizando un item (producto)
      */
     public function store(
-        StoreCarritoRequest $request,
+        StoreCarritoitemRequest $requestcarritoitem,
         CarritoService $carritoService,
         CarritoitemService $carritoitemService,
     ): JsonResponse {
@@ -56,10 +62,10 @@ class CarritoController extends Controller
             ], 401);
         }
 
-        $item = DB::transaction(function () use ($request, $carritoService, $carritoitemService, $usuario) {
+        $item = DB::transaction(function () use ($requestcarritoitem, $carritoService, $carritoitemService, $usuario) {
             $carrito = $carritoService->findOrCreateCarrito((int) $usuario->id);
 
-            return $carritoitemService->findOrCreateCarritoitem($carrito, $request->toDTO());
+            return $carritoitemService->findOrCreateCarritoitem($carrito, $requestcarritoitem->toDTO());
         });
 
         return response()->json(new CarritoitemResource($item->load('producto')), 201);
@@ -124,7 +130,7 @@ class CarritoController extends Controller
         ], 204);
     }
 
-    public function checkout(): JsonResponse
+    public function checkout(ResumenCarritoService $resumenCarritoService): JsonResponse
     {
         $usuario = auth('api')->user();
 
@@ -134,7 +140,10 @@ class CarritoController extends Controller
             ], 401);
         }
 
-        $carrito = $usuario->carrito()->with('items.producto')->first();
+        $carrito = $usuario->carrito()
+            ->where('estado', 'activo')
+            ->with('items.producto')
+            ->first();
 
         if ($carrito === null) {
             return response()->json([
@@ -148,42 +157,32 @@ class CarritoController extends Controller
             ], 422);
         }
 
-        $resumen = DB::transaction(function () use ($carrito) {
-            $subtotal = 0.0;
+        $resumen = DB::transaction(function () use ($carrito, $resumenCarritoService): array {
+            $carrito->load('items.producto');
 
             foreach ($carrito->items as $item) {
-                $producto = $item->producto;
-
-                if ($producto === null) {
-                    abort(422, 'El producto asociado al item no existe.');
+                if ($item->producto === null) {
+                    throw ValidationException::withMessages([
+                        'carrito' => 'El producto asociado al item no existe.',
+                    ]);
                 }
 
-                if ($producto->stock < $item->cantidad) {
-                    abort(422, 'No hay stock suficiente para el producto '.$producto->nombre.'.');
+                if ($item->producto->stock < $item->cantidad) {
+                    throw ValidationException::withMessages([
+                        'carrito' => 'No hay stock suficiente para el producto '.$item->producto->nombre.'.',
+                    ]);
                 }
-
-                $subtotal += (float) $item->cantidad * (float) $item->precio_unitario;
             }
 
-            $impuesto = round($subtotal * 0.21, 2);
-            $gastosDeEnvio = $subtotal < 10000 ? 5000 : 0;
-            $total = round($subtotal + $impuesto + $gastosDeEnvio, 2);
+            $resumen = $resumenCarritoService->calcular($carrito->items);
 
             foreach ($carrito->items as $item) {
-                $producto = $item->producto;
-                $producto->stock = $producto->stock - $item->cantidad;
-                $producto->save();
+                $item->producto->decrement('stock', $item->cantidad);
             }
 
-            $carrito->estado = 'finalizado';
-            $carrito->save();
+            $carrito->update(['estado' => 'finalizado']);
 
-            return [
-                'SUBTOTAL' => round($subtotal, 2),
-                'IMPUESTO' => round($impuesto, 2),
-                'GASTOS_DE_ENVIO' => $gastosDeEnvio,
-                'TOTAL' => round($total, 2),
-            ];
+            return $resumen;
         });
 
         return response()->json([
