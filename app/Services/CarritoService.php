@@ -9,8 +9,10 @@ class CarritoService
     public function findOrCreateCarrito(int $usuarioId): Carrito
     {
         return Carrito::firstOrCreate(
-            ['usuario_id' => $usuarioId],
-            ['estado' => 'activo'],
+            [
+                'usuario_id' => $usuarioId,
+                'estado' => 'activo',
+            ],
         );
     }
 }
