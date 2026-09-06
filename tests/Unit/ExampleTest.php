@@ -1,5 +1,12 @@
 <?php
 
-test('that true is true', function () {
-    expect(true)->toBeTrue();
+use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(TestCase::class, RefreshDatabase::class);
+
+test('the application returns a successful response', function () {
+    $response = $this->getJson('/');
+
+    $response->assertOk();
 });

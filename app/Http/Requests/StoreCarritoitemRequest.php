@@ -9,7 +9,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreCarritoRequest extends FormRequest
+class StoreCarritoitemRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -54,7 +54,6 @@ class StoreCarritoRequest extends FormRequest
                         })
                         ->where('producto_id', $this->input('producto_id'))
                         ->value('cantidad') ?? 0;
-
                     $query->where('stock', '>=', $cantidadEnCarrito + (int) $this->input('cantidad'));
                 }),
             ],
