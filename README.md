@@ -217,11 +217,11 @@ Formato de Respuesta: JSON.
 
 Códigos de Estado: Se utilizan los estándares HTTP (200 OK, 201 Creado, 204 eliminado OK, 404 No Encontrado, 422 Error de Validación, etc.).
 
-Autenticación: (Pendiente de implementar. Por ahora, las rutas son públicas).
+Autenticación: Implementado con JWT.
 
 ## 📡 API REST
 
-La aplicación dispone de una API REST para gestionar **categorías, productos, usuarios, login, carrito y check out de carrito**.
+La aplicación dispone de una API REST para gestionar **categorías, productos, usuarios, login, carrito y checKout de carrito**.
 
 Los endpoints se encuentran definidos en `routes/api.php` y utilizan los métodos HTTP:
 
@@ -243,7 +243,7 @@ http://127.0.0.1:8000/api/v1
 Por ejemplo:
 
 ```text
-GET /api/v1/productos
+GET http://127.0.0.1:8000/api/v1/productos
 ```
 Esta ruta no está protegida por lo que cualquier ususario pueda ver una lista de productos ordenado por id, o para ser manipulada y filtrada:
 ```json
@@ -317,7 +317,7 @@ El proyecto utiliza el paquete 'php-open-source-saver/jwt-auth' para la implemen
 "php-open-source-saver/jwt-auth": "^2.9"
 
 ```bash
-composer require tymon/jwt-auth
+composer require php-open-source-saver/jwt-auth
 ```
 
 ## 📋 Estructura del Token JWT
@@ -407,8 +407,62 @@ sequenceDiagram
 ```
 
 
-## 1. Emisión (Firma y Verificación Inicial)
-Endpoint: `POST {{url_base}}/login`
+## 1. Regristo de usuario (register)
+Para que un usuario se registre debe solicitar a la ruta `/api/v1/register` con una petición POST, enviando los datos del usuario en formato JSON por Body:
+
+```http
+POST /api/v1/register
+```
+
+**Body JSON:**
+```json
+{
+    "nombre" : "Analia",
+    "apellido" : "Gonzalez",
+    "email" : "analia@example.com",
+    "password" : "password",
+    "password_confirmation" : "password",
+    "telefono" : "232332333",
+    "domicilio" : "el domicilio usuario falso",
+    "ciudad" : "Catriel",
+    "codigo_postal" : "8203"
+} 
+```
+
+Respuesta:
+
+```json
+{
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL3YxL3JlZ2lzdGVyIiwiaWF0IjoxNzg4NzQwNTYxLCJleHAiOjE3ODg3NDQxNjEsIm5iZiI6MTc4ODc0MDU2MSwianRpIjoiMEdHY1FlSDNpQ2RYYUh5TiIsInN1YiI6IjE2IiwicHJ2IjoiNTg3MDg2M2Q0YTYyZDc5MTQ0M2ZhZjkzNmZjMzY4MDMxZDExMGM0ZiJ9._9E2RAdlWvxvEyX8M1RkCxHktxJxFJvBIoQQtubj5MI",
+    "token_type": "bearer",
+    "expires_in": 3600,
+    "usuario": {
+        "nombre": "Analia",
+        "apellido": "Gonzalez",
+        "email": "analia@example.com",
+        "telefono": "232332333",
+        "ciudad": "Catriel",
+        "codigo_postal": "8203",
+        "updated_at": "2026-09-07T00:22:41.000000Z",
+        "created_at": "2026-09-07T00:22:41.000000Z",
+        "id": 16
+    }
+}
+```
+**Respuesta exitosa:** ![201 Created](https://img.shields.io/badge/201-Created-green)
+
+
+## 2. Emisión (Firma y Verificación Inicial)
+
+Endpoint: `POST /api/v1/login`
+Content-Type: application/json
+
+```json
+{
+    "email" : "analia@example.com",
+    "password" : "password"
+} 
+```
 
 Proceso:
 
@@ -421,39 +475,43 @@ Proceso:
 - El token se devuelve al cliente en la respuesta.
 
 
-Ejemplo de Petición:
-
-```http
-POST {{url_base}}/login
-Content-Type: application/json
-
-{
-    "email": "juan@example.com",
-    "password": "12345678"
-}
-```
-
-Ejemplo de Respuesta Exitosa:
-
 ```json
 {
-    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL3YxL2xvZ2luIiwiaWF0IjoxNzg4NzQwNzYwLCJleHAiOjE3ODg3NDQzNjAsIm5iZiI6MTc4ODc0MDc2MCwianRpIjoiRk55dnl1TWt1SEpGQWVoViIsInN1YiI6IjE2IiwicHJ2IjoiNTg3MDg2M2Q0YTYyZDc5MTQ0M2ZhZjkzNmZjMzY4MDMxZDExMGM0ZiJ9.6otWPlLicZMy2ib0WV627-AWoY9KJmNL0jH5NZS99W8",
     "token_type": "bearer",
-    "expires_in": 3600
+    "expires_in": 3600,
+    "usuario": {
+        "id": 16,
+        "nombre": "Analia",
+        "apellido": "Gonzalez",
+        "email": "analia@example.com",
+        "email_verified_at": null,
+        "isadmin": false,
+        "created_at": "2026-09-07T00:22:41.000000Z",
+        "updated_at": "2026-09-07T00:22:41.000000Z",
+        "telefono": "232332333",
+        "direccion": null,
+        "ciudad": "Catriel",
+        "codigo_postal": "8203",
+        "pais": "Argentina"
+    }
 }
 ```
 **Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
 
 Ejemplo de Respuesta con credenciales erroneas:
 
 ```json
 {
-    "message": "Las credenciales no son válidas."
+    "message": "no autenticado",
+    "status": 401,
+    "errors": {}
 }
 ```
-**Respuesta no exitosa:** ![422 Unauthorized](https://img.shields.io/badge/404-Unauthorized-red)
+**Respuesta no exitosa:** ![401 Unauthorized](https://img.shields.io/badge/401-Unauthorized-red)
 
-## 2. Almacenamiento en Cliente
+## 3. Almacenamiento en Cliente
 El cliente (frontend) debe almacenar el token de forma segura. Las opciones comunes son:
 
 - Almacenamiento en memoria: Para aplicaciones SPA.
@@ -464,11 +522,12 @@ El cliente (frontend) debe almacenar el token de forma segura. Las opciones comu
 
 - Recomendación: Para APIs, usar el header Authorization con el token.
 
-## 3. Verificación en Solicitudes Protegidas
-Para acceder a rutas protegidas, el cliente debe incluir el token en el header de autorización:
-
+## 4. Verificación en Solicitudes Protegidas
+Para acceder a rutas protegidas, el cliente debe incluir el token en el header de autorización.
+Si un usuario intenta accedar a la ruta del profile, debería poder recibir su información.
+Ejemplo de solicitud
 ```http
-GET /api/v1/productos
+GET /api/v1/profile
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
 ```
 
@@ -485,6 +544,92 @@ Proceso de Verificación en el Servidor (Middleware):
 - Si es válido, decodifica el payload y asocia el usuario a la solicitud.
 
 - Si falla, devuelve un error 401 Unauthorized.
+
+Si la respuesta es exitosa:
+```json
+{
+    "id": 16,
+    "nombre": "Analia",
+    "apellido": "Gonzalez",
+    "email": "analia@example.com",
+    "email_verified_at": null,
+    "isadmin": false,
+    "created_at": "2026-09-07T00:22:41.000000Z",
+    "updated_at": "2026-09-07T00:22:41.000000Z",
+    "telefono": "232332333",
+    "direccion": null,
+    "ciudad": "Catriel",
+    "codigo_postal": "8203",
+    "pais": "Argentina"
+}
+```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
+Si el usuario no está inició sesión debería devolver:
+
+```json
+{
+    "message": "no autenticado",
+    "status": 401,
+    "errors": {}
+}
+```
+**Respuesta no exitosa:** ![401 Unauthorized](https://img.shields.io/badge/401-Unauthorized-red)
+
+
+## 5.Actualizar un usuario
+Un usuario que inicia sesión puede solicitar actualizar información del perfil con una solicitud PUT, enviando por Body los datos a actualizar:
+```http
+PUT /api/v1/profile
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+```
+
+**Body JSON:**
+
+```json
+{
+    "nombre": "Analia Nuevo",
+    "apellido": "Gonzalez Modificado",
+    "telefono": "2954929292",
+    "direccion": "Calle Falsa 124",
+    "ciudad": "Casa de Piedra",
+    "codigo_postal": "C8201",
+}
+
+```
+**Parámetros:**
+
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `nombre` | string | No | Nombre del usuario opcional |
+| `apellido` | string | No | Apellido del usuario opcional |
+| `email` | string | Identifica el usuario como único|
+| `telefono` | string | No | telefono opcional |
+| `direccion` | string | No | direccion opcional |
+| `ciudad` | string | No | ciudad opcional |
+| `codigo_postal` | string | No | código postal opcional |
+| `pais` | string | No | Por defecto es argentina |
+| `isadmin` | string | No | Por defecto es false si no se envía el campo |
+
+
+```json
+{
+    "id": 16,
+    "nombre": "Analia Nuevo",
+    "apellido": "Gonzalez Modificado",
+    "email": "analia@example.com",
+    "email_verified_at": null,
+    "isadmin": false,
+    "created_at": "2026-09-07T00:22:41.000000Z",
+    "updated_at": "2026-09-07T00:23:22.000000Z",
+    "telefono": "2954929292",
+    "direccion": "Calle Falsa 124",
+    "ciudad": "Casa de Piedra",
+    "codigo_postal": "C8201",
+    "pais": "Argentina"
+}
+```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
 
 ## 4. Expiración
 Los tokens tienen un tiempo de vida limitado para reducir el riesgo de robo. La expiración se controla con el claim exp.
