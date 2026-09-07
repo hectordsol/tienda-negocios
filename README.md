@@ -1501,5 +1501,138 @@ con código HTTP `404 Not Found`, utilizando mensajes específicos para cada ent
 | `422 Unprocessable Entity` | Datos enviados que no superan la validación |
 
 
+## 🧪 Ejecución de Pruebas (Test Suite)
+El proyecto incluye un conjunto de pruebas automatizadas para verificar el correcto funcionamiento de la API y la lógica de negocio. Estas pruebas se dividen en dos categorías principales:
+
+Pruebas de Integración (Feature): Validan los endpoints de la API y las interacciones entre componentes.
+
+Pruebas Unitarias (Unit): Verifican el comportamiento de clases y métodos específicos de forma aislada.
+
+Estructura de las Pruebas
+
+Los archivos de prueba se encuentran en el directorio tests/ y siguen la siguiente estructura:
+
+```text
+├── Feature/                          # Pruebas de integración (API)
+│   ├── AutenticacionApiTest.php      # Pruebas de registro, login, logout y perfil
+│   ├── CarritoCheckoutApiTest.php    # Pruebas del proceso de checkout del carrito
+│   ├── CarritoItemExistsTest.php     # Pruebas para verificar items en el carrito
+│   ├── CategoriaApiTest.php          # Pruebas del CRUD de categorías (solo admin)
+│   ├── ProductoApiTest.php           # Pruebas del CRUD de productos
+│   └── UsuarioApiTest.php            # Pruebas del CRUD de usuarios (solo admin)
+└── Unit/                             # Pruebas unitarias
+    ├── ExampleTest.php               # Prueba de ejemplo de Laravel
+    └── ResumenCarritoTest.php        # Pruebas de la lógica de resumen del carrito
+```
+
+Requisitos Previos
+Asegurar que el entorno cumpla con los siguientes requisitos antes de ejecutar las pruebas:
+
+Base de Datos de Pruebas: Se recomienda crear una base de datos separada para las pruebas (por ejemplo, tienda_negocios_test) para no afectar tu entorno de desarrollo. El archivo phpunit.xml está configurado para usar variables de entorno específicas.
+
+Archivo de Entorno .env.testing: Crear un archivo .env.testing en la raíz del proyecto. En él, configurar las variables de conexión a la base de datos de pruebas y la clave de JWT.
+
+Puedes generar una clave secreta para pruebas con el comando:
+```bash
+ php artisan jwt:secret --env=testing.
+```
+### Comandos para Ejecutar las Pruebas
+
+Utiliza el comando `php artisan test` de Laravel para ejecutar los tests (Feature y Unit)::
+
+```bash
+php artisan test
+```
+
+Ejecutar solo las pruebas de características (Feature):
+
+```bash
+php artisan test --testsuite=Feature
+```
+
+Ejecutar solo las pruebas unitarias (Unit):
+
+```bash
+php artisan test --testsuite=Unit
+```
+
+Ejecutar un archivo de prueba específico:
+
+```bash
+php artisan test tests/Feature/AutenticacionApiTest
+```
+### Listado de test disponibles
+
+```text
+Tests\Feature\AutenticacionApiTest
+   registro_una_persona
+   intento_registrar_usuario_registrado
+   intento_registra_sin_campos_obligatorios
+   inicio_sesion_usuario_registrado
+   intento_iniciar_sesion_sin_registrar
+   persona_autenticada_vea_perfil
+   persona_autenticada_actualiza_perfil
+   persona_sin_autenticar_no_puede_modificar_perfil
+   rechazo_perfil_sin_token
+
+Tests\Feature\CarritoCheckoutApiTest
+   calcula_un_carrito_con_envio
+   ofrece_envio_gratis_justo_desde_el_monto_limite
+   cobra_gastos_envio_cuando_no_alcanza_el_envio_gratis_limite_inferior
+   cobrar_gastos_envio_cuando_no_alcanza_el_envio_gratis_limite_superior
+   suma_varias_lineas_antes_de_calcular_impuestos
+   un_carrito_vacio_no_debe_genera_cargos
+
+
+Tests\Feature\CarritoItemExistsTest
+   it_devuelve_solo_el_carrito_activo
+   it_crea_un_carrito_activo_nuevo_si_el_usuario_solo_tiene_carritos_finalizados
+   it_evita_productos_duplicados_en_el_mismo_carrito_de_usuario
+   it_rechaza_la_eliminacion_de_un_articulo_que_no_se_encuentra_en_el_carrito_del_usuario_autenticado
+   it_elimina_el_carrito_activo_del_usuario_autenticado
+   it_procesa_el_carrito_activo_y_devuelve_el_resumen_del_pedido
+
+Tests\Feature\CategoriaApiTest
+   listar_categoria_solo_admin
+   persona_admin_crea_categoria_ok
+   persona_sin_token_admin_no_puede_crear_categoria
+   persona_con_token_admin_puede_modificar_categoria
+   persona_sin_token_admin_no_puede_modificar_categoria
+   persona_con_token_admin_puede_borrar_categoria
+   persona_sin_token_admin_no_puede_borrar_categoria
+
+Tests\Feature\ProductoApiTest
+   listar_productos_cualquier_usuario_sin_loguear
+   persona_admin_crea_producto_ok
+   persona_sin_token_admin_no_puede_crear_producto
+   persona_con_token_admin_puede_modificar_producto
+   persona_sin_token_admin_no_puede_modificar_producto
+   persona_con_token_admin_puede_borrar_producto
+   persona_sin_token_admin_no_puede_borrar_producto
+
+Tests\Feature\UsuarioApiTest
+   listar_usuarios_solo_admin
+   persona_admin_crea_usuario_ok
+   persona_sin_token_admin_no_puede_crear_usuario
+   persona_con_token_admin_puede_modificar_usuario
+   persona_sin_token_admin_no_puede_modificar_usuario
+   persona_con_token_admin_puede_borrar_usuario
+   persona_sin_token_admin_no_puede_borrar_usuario
+
+Tests/Unit/ResumenCarritoTest.php
+   calcula_un_carrito_con_envio
+   ofrece_envio_gratis_justo_desde_el_monto_limite
+   cobra_gastos_envio_cuando_no_alcanza_el_envio_gratis_limite_inferior
+   cobrar_gastos_envio_cuando_no_alcanza_el_envio_gratis_limite_superior
+   suma_varias_lineas_antes_de_calcular_impuestos
+   un_carrito_vacio_no_debe_genera_cargos
+  ```
+De este listado se puede seleccionar filtrando el nombre para testear un método específico. Por ej.:
+
+```bash
+php artisan test --filter=registro_una_persona
+```
+
+
 ## 👨‍💻 Desarrollador
 Nombre del desarrollador - [Héctor Darío Sol]
