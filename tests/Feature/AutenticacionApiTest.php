@@ -10,7 +10,7 @@ class AutenticacionApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testear_registro_una_persona(): void
+    public function test_registro_una_persona(): void
     {
         // Prepara los datos. Arrange
         $usuario = [
@@ -161,6 +161,39 @@ class AutenticacionApiTest extends TestCase
             ->assertJsonPath('email', $usuario->email)
             ->assertJsonMissingPath('password');
 
+    }
+
+    public function test_persona_autenticada_actualiza_perfil(): void
+    {
+        $usuario = Usuario::factory()->create();
+
+        $token = auth('api')->login($usuario);
+
+        $response = $this->withToken($token)
+            ->putJson('/api/v1/profile', [
+                'nombre' => 'Ana Actualizada',
+                'apellido' => 'Ropa Nueva',
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Usuario actualizado correctamente.')
+            ->assertJsonPath('usuario.id', $usuario->id)
+            ->assertJsonPath('usuario.nombre', 'Ana Actualizada')
+            ->assertJsonPath('usuario.apellido', 'Ropa Nueva')
+            ->assertJsonMissingPath('usuario.password');
+
+        $this->assertDatabaseHas('usuarios', [
+            'id' => $usuario->id,
+            'nombre' => 'Ana Actualizada',
+            'apellido' => 'Ropa Nueva',
+        ]);
+    }
+
+    public function test_persona_sin_autenticar_no_puede_modificar_perfil(): void
+    {
+        $this->putJson('/api/v1/profile', [
+            'nombre' => 'Ana Actualizada',
+        ])->assertUnauthorized();
     }
 
     public function test_rechazo_perfil_sin_token(): void

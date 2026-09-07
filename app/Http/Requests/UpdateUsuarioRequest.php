@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateUsuarioRequest extends FormRequest
 {
@@ -25,7 +26,13 @@ class UpdateUsuarioRequest extends FormRequest
         return [
             'nombre' => ['sometimes', 'string', 'max:255'],
             'apellido' => ['sometimes', 'string', 'max:255'],
-            'email' => ['sometimes', 'string', 'email', 'max:255', 'unique:usuarios,email,'.$this->route('usuario')->id],
+            'email' => [
+                'sometimes',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('usuarios', 'email')->ignore(auth('api')->id()),
+            ],
             'password' => ['sometimes', 'string', 'min:8', 'confirmed'],
             'telefono' => ['sometimes', 'nullable', 'string', 'max:255'],
             'direccion' => ['sometimes', 'nullable', 'string', 'max:255'],
