@@ -18,6 +18,12 @@
 - ✅ Validar datos con Requests
 - ✅ Diseñar en Productos DTO (Data Transfer Object) con Productos y Carritos
 - ✅ Busquedas personalizadas
+- ✅ Diseñar en Productos DTO (Data Transfer Object)
+- ✅ Implementar registro, login, logout
+- ✅ Proteger rutas
+- ✅ Middleware globales y locales
+- ✅ Almacenar contraseñas seguras
+
 
 
 ### 🔄 Próximos Pasos
@@ -43,19 +49,24 @@
 ```text
 tienda-negocios/
 ├── app/
-│   ├── DTO
+│   ├── DTO/
 │   │   ├── CarritoDTO.php
 │   │   ├── CarritoitemDTO.php
 │   │   └── ProductoDTO.php
+│   ├── Exceptions/
+│   │   └── ApiException.php
 │   ├── Http/
 │   │   └── Controllers/
-│   │       ├──Api
+│   │       ├── Api
 │   │       │   └──V1
+│   │       │       ├── AuthController.php
 │   │       │       ├── CarritoController.php
 │   │       │       ├── CategoriaController.php
 │   │       │       ├── ProductoController.php
 │   │       │       └── UsuarioController.php
-│   │       ├──Controller.php
+│   │       ├── Controller.php
+│   │       ├── Middleware
+│   │       │   └── IsAdmin.php
 │   │       ├── Requests/
 │   │       │   ├── StoreCarritoRequest.php
 │   │       │   ├── StoreCategoriaRequest.php
@@ -65,9 +76,10 @@ tienda-negocios/
 │   │       │   ├── UpdateProductoRequest.php
 │   │       │   └── UpdateUsuarioRequest.php
 │   │       └── Resources/
-│   │           ├── CarritoResource.php
-│   │           ├── CarritoitemResource.php
-│   │           └── ProductoResource.php
+│   │           ├──CarritoitemResource.php
+│   │           ├──CarritoResource.php
+│   │           ├──ProductoResource.php
+│   │           └──ResumenCarritoResource.php
 │   ├── Models/
 │   │   ├── Carrito.php
 │   │   ├── Carritoitem.php
@@ -77,9 +89,13 @@ tienda-negocios/
 │   ├── Providers/
 │   │   └── AppServiceProvider.php
 │   └── Services/
-│       ├── CarritoService.php
 │       ├── CarritoitemService.php
-│       └── ProductoService.php
+│       ├── CarritoService.php
+│       ├── ProductoService.php
+│       └── ResumenCarritoService.php
+├── bootstrap/
+│   ├── cache/
+│   └── app.php <-exceptions with middleware
 ├── database/
 │   ├── migrations/
 │   │   ├── [timestamp]_create_usuarios_table.php
@@ -88,7 +104,8 @@ tienda-negocios/
 │   │   ├── [timestamp]_create_productos_table.php
 │   │   ├── [timestamp]_add_categoria_id_productos_table
 │   │   ├── [timestamp]_create_carritos_table.php
-│   │   └── [timestamp]_create_carritositems_table.php
+│   │   ├── [timestamp]_create_carritositems_table.php
+│   │   └── [timestamp]_allow_multiple_carts_per_user
 │   └── seeders/
 │       ├── CategoriaSeeder.php
 │       ├── DatabaseSeeder.php
@@ -99,6 +116,17 @@ tienda-negocios/
 ├── routes/
 │   ├── api.php
 │   └── web.php
+├── tests/
+│   ├── Feature
+│   │    ├── AutenticacionApiTest.php
+│   │    ├── CarritoCheckoutApiTest.php
+│   │    ├── CarritoItemExistsTest.php
+│   │    ├── CategoriaApiTest.php
+│   │    ├── ProductoApiTest.php
+│   │    └── UsuarioApiTest.php
+│   └── Unit
+│        ├── ExampleTest.php
+│        └── ResumenCarritoTest.php
 └── ...
 ```
 
@@ -177,7 +205,7 @@ Inicia el servidor de desarrollo de Laravel para poder acceder a la aplicación 
 Resultado:
 La aplicación queda disponible normalmente en:
 
-http://127.0.0.1:8000
+http://127.0.0.1:8000 o http://localhost:8000
 
 
 ## 🌐 Documentación de Rutas (API)
@@ -185,16 +213,16 @@ La API de Tienda de Negocios está definida en el archivo routes/api.php y sigue
 
 Convenciones Generales:
 
-Base URL: http://localhost:8000/api/v1 {{url_base}}
+Base URL: http://localhost:8000/api/v1
 Formato de Respuesta: JSON.
 
 Códigos de Estado: Se utilizan los estándares HTTP (200 OK, 201 Creado, 204 eliminado OK, 404 No Encontrado, 422 Error de Validación, etc.).
 
-Autenticación: (Pendiente de implementar. Por ahora, las rutas son públicas).
+Autenticación: Implementado con JWT.
 
 ## 📡 API REST
 
-La aplicación dispone de una API REST para gestionar **categorías, productos, usuarios y carritos**.
+La aplicación dispone de una API REST para gestionar **categorías, productos, usuarios, login, carrito y checKout de carrito**.
 
 Los endpoints se encuentran definidos en `routes/api.php` y utilizan los métodos HTTP:
 
@@ -210,13 +238,13 @@ La respuesta de la API se devuelve en formato **JSON**.
 Durante el desarrollo local:
 
 ```text
-http://127.0.0.1:8000/api/v1 llamaremos {{url_base}}
+http://127.0.0.1:8000/api/v1
 ```
 
 Por ejemplo:
 
 ```text
-GET {{url_base}}/productos
+GET http://127.0.0.1:8000/api/v1/productos
 ```
 Esta ruta no está protegida por lo que cualquier ususario pueda ver una lista de productos ordenado por id, o para ser manipulada y filtrada:
 ```json
@@ -254,12 +282,19 @@ Esta ruta no está protegida por lo que cualquier ususario pueda ver una lista d
 ```
 **Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
 
-Lo mismo para
+**Endpoint:** `GET /api/v1/productos/{id}`
+
+**Parámetros de ruta:**
+
+| Parámetro | Tipo   | Descripción                    | Obligatorio |
+|-----------|--------|--------------------------------|-------------|
+| `id`      | Entero | ID único del producto a consultar | Sí          |
+
 ```text
-GET {{url_base}}/productos/1
+GET /api/v1/productos/1
 
 ```
-Para consultar un producto que devuelve:
+Esta consulta del producto id 1 devuelve:
 ```json
     {
         "id": 1,
@@ -283,7 +318,7 @@ El proyecto utiliza el paquete 'php-open-source-saver/jwt-auth' para la implemen
 "php-open-source-saver/jwt-auth": "^2.9"
 
 ```bash
-composer require tymon/jwt-auth
+composer require php-open-source-saver/jwt-auth
 ```
 
 ## 📋 Estructura del Token JWT
@@ -373,52 +408,111 @@ sequenceDiagram
 ```
 
 
-## 1. Emisión (Firma y Verificación Inicial)
-Endpoint: `POST {{url_base}}/login`
-
-Proceso:
-
-El usuario envía sus credenciales (email y password) al endpoint de login.
-
-El controlador valida las credenciales contra la base de datos.
-
-Si son correctas, se genera un nuevo JWT usando la clave secreta del servidor.
-
-El token se devuelve al cliente en la respuesta.
-
-Ejemplo de Petición:
+## 1. Regristo de usuario (register)
+Para que un usuario se registre debe solicitar a la ruta `/api/v1/register` con una petición POST, enviando los datos del usuario en formato JSON por Body:
 
 ```http
-POST {{url_base}}/login
-Content-Type: application/json
-
-{
-    "email": "juan@example.com",
-    "password": "12345678"
-}
+POST /api/v1/register
 ```
 
-Ejemplo de Respuesta Exitosa:
+**Body JSON:**
+```json
+{
+    "nombre" : "Analia",
+    "apellido" : "Gonzalez",
+    "email" : "analia@example.com",
+    "password" : "password",
+    "password_confirmation" : "password",
+    "telefono" : "232332333",
+    "domicilio" : "el domicilio usuario falso",
+    "ciudad" : "Catriel",
+    "codigo_postal" : "8203"
+} 
+```
+
+Respuesta:
 
 ```json
 {
-    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL3YxL3JlZ2lzdGVyIiwiaWF0IjoxNzg4NzQwNTYxLCJleHAiOjE3ODg3NDQxNjEsIm5iZiI6MTc4ODc0MDU2MSwianRpIjoiMEdHY1FlSDNpQ2RYYUh5TiIsInN1YiI6IjE2IiwicHJ2IjoiNTg3MDg2M2Q0YTYyZDc5MTQ0M2ZhZjkzNmZjMzY4MDMxZDExMGM0ZiJ9._9E2RAdlWvxvEyX8M1RkCxHktxJxFJvBIoQQtubj5MI",
     "token_type": "bearer",
-    "expires_in": 3600
+    "expires_in": 3600,
+    "usuario": {
+        "nombre": "Analia",
+        "apellido": "Gonzalez",
+        "email": "analia@example.com",
+        "telefono": "232332333",
+        "ciudad": "Catriel",
+        "codigo_postal": "8203",
+        "updated_at": "2026-09-07T00:22:41.000000Z",
+        "created_at": "2026-09-07T00:22:41.000000Z",
+        "id": 16
+    }
+}
+```
+**Respuesta exitosa:** ![201 Created](https://img.shields.io/badge/201-Created-green)
+
+
+## 2. Emisión (Firma y Verificación Inicial)
+
+Endpoint: `POST /api/v1/login`
+Content-Type: application/json
+
+```json
+{
+    "email" : "analia@example.com",
+    "password" : "password"
+} 
+```
+
+Proceso:
+
+- El usuario envía sus credenciales (email y password) al endpoint de login.
+
+- El controlador valida las credenciales contra la base de datos.
+
+- Si son correctas, se genera un nuevo JWT usando la clave secreta del servidor.
+
+- El token se devuelve al cliente en la respuesta.
+
+
+```json
+{
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL3YxL2xvZ2luIiwiaWF0IjoxNzg4NzQwNzYwLCJleHAiOjE3ODg3NDQzNjAsIm5iZiI6MTc4ODc0MDc2MCwianRpIjoiRk55dnl1TWt1SEpGQWVoViIsInN1YiI6IjE2IiwicHJ2IjoiNTg3MDg2M2Q0YTYyZDc5MTQ0M2ZhZjkzNmZjMzY4MDMxZDExMGM0ZiJ9.6otWPlLicZMy2ib0WV627-AWoY9KJmNL0jH5NZS99W8",
+    "token_type": "bearer",
+    "expires_in": 3600,
+    "usuario": {
+        "id": 16,
+        "nombre": "Analia",
+        "apellido": "Gonzalez",
+        "email": "analia@example.com",
+        "email_verified_at": null,
+        "isadmin": false,
+        "created_at": "2026-09-07T00:22:41.000000Z",
+        "updated_at": "2026-09-07T00:22:41.000000Z",
+        "telefono": "232332333",
+        "direccion": null,
+        "ciudad": "Catriel",
+        "codigo_postal": "8203",
+        "pais": "Argentina"
+    }
 }
 ```
 **Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
 
 Ejemplo de Respuesta con credenciales erroneas:
 
 ```json
 {
-    "message": "Las credenciales no son válidas."
+    "message": "no autenticado",
+    "status": 401,
+    "errors": {}
 }
 ```
-**Respuesta no exitosa:** ![422 Unauthorized](https://img.shields.io/badge/404-Unauthorized-red)
+**Respuesta no exitosa:** ![401 Unauthorized](https://img.shields.io/badge/401-Unauthorized-red)
 
-## 2. Almacenamiento en Cliente
+## 3. Almacenamiento en Cliente
 El cliente (frontend) debe almacenar el token de forma segura. Las opciones comunes son:
 
 - Almacenamiento en memoria: Para aplicaciones SPA.
@@ -429,11 +523,12 @@ El cliente (frontend) debe almacenar el token de forma segura. Las opciones comu
 
 - Recomendación: Para APIs, usar el header Authorization con el token.
 
-## 3. Verificación en Solicitudes Protegidas
-Para acceder a rutas protegidas, el cliente debe incluir el token en el header de autorización:
-
+## 4. Verificación en Solicitudes Protegidas
+Para acceder a rutas protegidas, el cliente debe incluir el token en el header de autorización.
+Si un usuario intenta accedar a la ruta del profile, debería poder recibir su información.
+Ejemplo de solicitud
 ```http
-GET {{url_base}}/productos
+GET /api/v1/profile
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
 ```
 
@@ -450,6 +545,92 @@ Proceso de Verificación en el Servidor (Middleware):
 - Si es válido, decodifica el payload y asocia el usuario a la solicitud.
 
 - Si falla, devuelve un error 401 Unauthorized.
+
+Si la respuesta es exitosa:
+```json
+{
+    "id": 16,
+    "nombre": "Analia",
+    "apellido": "Gonzalez",
+    "email": "analia@example.com",
+    "email_verified_at": null,
+    "isadmin": false,
+    "created_at": "2026-09-07T00:22:41.000000Z",
+    "updated_at": "2026-09-07T00:22:41.000000Z",
+    "telefono": "232332333",
+    "direccion": null,
+    "ciudad": "Catriel",
+    "codigo_postal": "8203",
+    "pais": "Argentina"
+}
+```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
+Si el usuario no está inició sesión debería devolver:
+
+```json
+{
+    "message": "no autenticado",
+    "status": 401,
+    "errors": {}
+}
+```
+**Respuesta no exitosa:** ![401 Unauthorized](https://img.shields.io/badge/401-Unauthorized-red)
+
+
+## 5.Actualizar un usuario
+Un usuario que inicia sesión puede solicitar actualizar información del perfil con una solicitud PUT, enviando por Body los datos a actualizar:
+```http
+PUT /api/v1/profile
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+```
+
+**Body JSON:**
+
+```json
+{
+    "nombre": "Analia Nuevo",
+    "apellido": "Gonzalez Modificado",
+    "telefono": "2954929292",
+    "direccion": "Calle Falsa 124",
+    "ciudad": "Casa de Piedra",
+    "codigo_postal": "C8201",
+}
+
+```
+**Parámetros:**
+
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `nombre` | string | No | Nombre del usuario opcional |
+| `apellido` | string | No | Apellido del usuario opcional |
+| `email` | string | Identifica el usuario como único|
+| `telefono` | string | No | telefono opcional |
+| `direccion` | string | No | direccion opcional |
+| `ciudad` | string | No | ciudad opcional |
+| `codigo_postal` | string | No | código postal opcional |
+| `pais` | string | No | Por defecto es argentina |
+| `isadmin` | string | No | Por defecto es false si no se envía el campo |
+
+
+```json
+{
+    "id": 16,
+    "nombre": "Analia Nuevo",
+    "apellido": "Gonzalez Modificado",
+    "email": "analia@example.com",
+    "email_verified_at": null,
+    "isadmin": false,
+    "created_at": "2026-09-07T00:22:41.000000Z",
+    "updated_at": "2026-09-07T00:23:22.000000Z",
+    "telefono": "2954929292",
+    "direccion": "Calle Falsa 124",
+    "ciudad": "Casa de Piedra",
+    "codigo_postal": "C8201",
+    "pais": "Argentina"
+}
+```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
 
 ## 4. Expiración
 Los tokens tienen un tiempo de vida limitado para reducir el riesgo de robo. La expiración se controla con el claim exp.
@@ -468,7 +649,7 @@ El cierre de sesión puede manejar la invalidación del token de dos maneras:
 
 - Invalidación en cliente: El cliente simplemente elimina el token de su almacenamiento local.
 
-- Endpoint: POST {{url_base}}/logout
+- Endpoint: POST /api/v1/logout
 
 Proceso:
 
@@ -481,7 +662,7 @@ Proceso:
 Ejemplo:
 
 ```http
-POST {{url_base}}/logout
+POST /api/v1/logout
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
 ```
 Respuesta:
@@ -492,6 +673,8 @@ Respuesta:
 }
 ```
 **Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
+
 # 🛡️ Seguridad y Buenas Prácticas
 
 ## Configuración de Clave Secreta. 
@@ -517,32 +700,31 @@ Se pueden agregar claims adicionales al payload, como datos básicos del usuario
 
 | Método | Endpoint | Descripción | Protección
 |---|---|---|---|
-| POST | {{url_base}}/login | Iniciar sesión y obtener token | Público |
-| POST | {{url_base}}/register | Registrar nuevo usuario | Público |
-| POST | {{url_base}}/logout | Cerrar sesión (invalidar token) | Privado (Bearer) |
-| GET | {{url_base}}/profile | Obtener datos del usuario autenticado | Privado (Bearer) |
-| PUT | {{url_base}}/profile | Actualizar datos del usuario autenticado | Privado (Bearer) |
+| POST | /api/v1/login | Iniciar sesión y obtener token | Público |
+| POST | /api/v1/register | Registrar nuevo usuario | Público |
+| POST | /api/v1/logout | Cerrar sesión (invalidar token) | Privado (Bearer) |
+| GET | /api/v1/profile | Obtener datos del usuario autenticado | Privado (Bearer) |
+| PUT | /api/v1/profile | Actualizar datos del usuario autenticado | Privado (Bearer) |
 
 ---
 
-# 🏷️ Categorías - Usuario (CRUD disponible solo para administrador)
+# 🏷️ Categorías (CRUD disponible solo para administrador)
 
-Las categorías permiten clasificar los productos de la tienda. Las rutas que manejan la información de las categorías de los productos están protegidas para que solo pueda manejarla si es usuario administrador. También la ruta para administrar usuarios desde un usuario administrador.
+Las categorías permiten clasificar los productos de la tienda. Las rutas que manejan la información de las categorías de los productos están protegidas para que solo pueda manejarla si es usuario administrador. Cualquier acción en:
 
-### Obtener todas las categorías o usuarios
+**Ruta categorías** `/api/v1/categorias`
 
-```http
-GET {{url_base}}/categorias
-GET {{url_base}}/usuarios
+
+**Cualquier acción en estas rutas si es un usuario y no es administrador devuelve:**
+
+```json
+{
+    "error": "Sin permiso para esta acción"
+}
 ```
+**Respuesta no exitosa:** ![403 Forbidden](https://img.shields.io/badge/403-Forbidden-red)
 
-
-**Parámetros:** ninguno.
-
-**Controlador:** `CategoriaController@index`
-
-**Cualquier acción en estas rutas si un administrador no se logueó debería enviar:**
-
+**y si no hay usuario logueado devuelve:**
 ```json
 {
     "message": "no autenticado",
@@ -550,9 +732,13 @@ GET {{url_base}}/usuarios
     "errors": {}
 }
 ```
-**Respuesta exitosa:** ![401 Unauthorized](https://img.shields.io/badge/401-Unauthorired-red)
+**Respuesta no exitosa:** ![401 Unauthorized](https://img.shields.io/badge/401-Unauthorized-red)
 
+### Obtener todas las categorías
 
+```http
+GET /api/v1/categorias
+```
 **Respuesta exitosa si es administrador Categorías envía:**
 
 ```json
@@ -588,11 +774,10 @@ GET {{url_base}}/usuarios
 
 El método obtiene todas las categorías mediante `Categoria::all()` y devuelve el resultado como JSON.
 
-### Obtener una categoría o usuario
+### Obtener una categoría
 
 ```http
-GET http://127.0.0.1:8000/api/v1/categorias/{categoria}
-GET http://127.0.0.1:8000/api/v1/usuarios/{usuario}
+GET /api/v1/categorias/{id}
 ```
 
 **Parámetros de URL:**
@@ -604,7 +789,7 @@ GET http://127.0.0.1:8000/api/v1/usuarios/{usuario}
 Ejemplo:
 
 ```http
-GET {{url_base}}/categorias/1
+GET /api/v1/categorias/1
 ```
 
 **Respuesta exitosa:** `200 OK`
@@ -621,6 +806,9 @@ GET {{url_base}}/categorias/1
 
 
 Si la categoría no existe:
+```http
+GET /api/v1/categorias/122
+```
 
 ```json
 {
@@ -636,41 +824,30 @@ Si la categoría no existe:
 ### Crear una categoría
 
 ```http
-POST {{url_base}}/categorias
+POST /api/v1/categorias
 ```
 
 **Body JSON:**
 
 ```json
-[
-    {
-        "id": 1,
-        "nombre": "Electrónica",
-        "slug": "electronica",
-        "descripcion": "Productos electrónicos como teléfonos, computadoras, televisores, etc.",
-        "created_at": "2026-08-28T04:08:04.000000Z",
-        "updated_at": "2026-08-28T04:08:04.000000Z"
-    },
-    {
-        "id": 2,
-        "nombre": "Indumentaria",
-        "slug": "indumentaria",
-        "descripcion": "Ropa para hombres, mujeres y niños.",
-        "created_at": "2026-08-28T04:08:04.000000Z",
-        "updated_at": "2026-08-28T04:08:04.000000Z"
-    },
-...
-    {
-        "id": 7,
-        "nombre": "Belleza",
-        "slug": "belleza",
-        "descripcion": "Productos de belleza y cuidado personal.",
-        "created_at": "2026-08-28T04:08:04.000000Z",
-        "updated_at": "2026-08-28T04:08:04.000000Z"
-    }
-]
+{
+    "nombre" : "Supermercado",
+    "slug" : "supermercado",
+    "descripcion":"Artículos de almacen"
+}
 ```
-**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
+```json
+{
+    "nombre": "Supermercado",
+    "slug": "supermercado",
+    "descripcion": "Artículos de almacen",
+    "updated_at": "2026-09-06T21:21:52.000000Z",
+    "created_at": "2026-09-06T21:21:52.000000Z",
+    "id": 8
+}
+```
+**Respuesta exitosa:** ![201 Created](https://img.shields.io/badge/201-Created-green)
 
 
 **Parámetros:**
@@ -735,7 +912,7 @@ Si no existe:
 }
 ```
 
-Código HTTP: `404 Not Found`.
+**Respuesta no exitosa:**  ![404 Not Found](https://img.shields.io/badge/404-Not_Found-red)
 
 ### Eliminar una categoría
 
@@ -749,13 +926,14 @@ DELETE {{url_base}}/categorias/{id}
 |---|---|---|
 | `id` | integer | Identificador de la categoría |
 
-**Respuesta exitosa:** `200 OK`
 
 ```json
 {
     "message": "Categoría eliminada"
 }
 ```
+**Respuesta exitosa:** ![204 No Content](https://img.shields.io/badge/204-No_Content-green)
+
 
 Si no existe:
 
@@ -769,7 +947,312 @@ Si no existe:
 }
 ```
 
-Código HTTP: `404 Not Found`.
+**Respuesta no exitosa:** ![404 Not Found](https://img.shields.io/badge/404-Not_Found-red)
+
+---
+
+
+# 🏷️ Usuarios (CRUD disponible solo para administrador)
+Las rutas que manejan la información de los usuarios de la tienda están protegidos para que solo pueda manejarla si es usuario administrador. Cualquier acción en:
+
+**Ruta usuarios** `/api/v1/usuarios`
+
+**Cualquier acción en esta ruta si es un usuario y no es administrador devuelve:**
+
+```json
+{
+    "error": "Sin permiso para esta acción"
+}
+```
+**Respuesta no exitosa:** ![403 Forbidden](https://img.shields.io/badge/403-Forbidden-red)
+
+**y si no hay usuario logueado devuelve:**
+```json
+{
+    "message": "no autenticado",
+    "status": 401,
+    "errors": {}
+}
+```
+**Respuesta no exitosa:** ![401 Unauthorized](https://img.shields.io/badge/401-Unauthorized-red)
+
+
+### Obtener todos los usuarios
+
+```http
+GET /api/v1/usuarios
+```
+**Respuesta exitosa si es administrador Categorías envía:**
+
+```json
+[
+    {
+        "id": 1,
+        "nombre": "Usuario1",
+        "apellido": "Apellido de ejemplo1",
+        "email": "usuario1@example.com",
+        "email_verified_at": null,
+        "isadmin": true,
+        "created_at": "2026-08-28T04:08:05.000000Z",
+        "updated_at": "2026-08-28T04:08:05.000000Z",
+        "telefono": null,
+        "direccion": null,
+        "ciudad": null,
+        "codigo_postal": null,
+        "pais": "Argentina"
+    },
+    {
+        "id": 2,
+        "nombre": "Usuario2",
+        "apellido": "Apellido de ejemplo2",
+        "email": "usuario2@example.com",
+        "email_verified_at": null,
+        "isadmin": false,
+        "created_at": "2026-08-28T04:08:05.000000Z",
+        "updated_at": "2026-08-28T04:08:05.000000Z",
+        "telefono": null,
+        "direccion": null,
+        "ciudad": null,
+        "codigo_postal": null,
+        "pais": "Argentina"
+    },
+    ...
+   {
+        "id": 14,
+        "nombre": "Maria",
+        "apellido": "Lopez",
+        "email": "maria@example.com",
+        "email_verified_at": null,
+        "isadmin": false,
+        "created_at": "2026-09-06T00:01:52.000000Z",
+        "updated_at": "2026-09-06T00:01:52.000000Z",
+        "telefono": "2954929292",
+        "direccion": "Calle Falsa 123",
+        "ciudad": "Buenos Aires",
+        "codigo_postal": "C1000",
+        "pais": "Argentina"
+    }
+]
+```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
+El método obtiene todas las categorías mediante `Usuario::all()` y devuelve el resultado como JSON.
+
+### Obtener una categoría o usuario
+
+```http
+GET /api/v1/usuarios/{id}
+```
+
+**Parámetros de URL:**
+
+| Parámetro | Tipo | Descripción |
+|---|---|---|
+| `id` | integer | Identificador de la categoría |
+
+Ejemplo:
+
+```http
+GET /api/v1/usuarios/1
+```
+Si el usuario existe:
+
+```json
+{
+    "id": 1,
+    "nombre": "Usuario1",
+    "apellido": "Apellido de ejemplo1",
+    "email": "usuario1@example.com",
+    "email_verified_at": null,
+    "isadmin": true,
+    "created_at": "2026-08-28T04:08:05.000000Z",
+    "updated_at": "2026-08-28T04:08:05.000000Z",
+    "telefono": null,
+    "direccion": null,
+    "ciudad": null,
+    "codigo_postal": null,
+    "pais": "Argentina"
+}
+```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
+
+Si el usuario no existe:
+```http
+GET /api/v1/usuarios/111
+```
+
+```json
+{
+    "message": "Recurso no encontrado",
+    "status": 404,
+    "errors": {
+        "error": "No query results for model [App\\Models\\Usuario] 111"
+    }
+}
+```
+**Respuesta no exitosa:**  ![404 Not Found](https://img.shields.io/badge/404-Not_Found-red)
+
+### Crear un usuario
+
+```http
+POST /api/v1/usuarios
+```
+
+**Body JSON:**
+
+```json
+{
+    "nombre": "Pedro",
+    "email": "pedro@example.com",
+    "password" : "secret123",
+    "password_confirmation" : "secret123",
+    "apellido": "Martinez",
+    "telefono": "2954929292",
+    "direccion": "Calle Falsa 124",
+    "ciudad": "Puelen",
+    "codigo_postal": "C8201",
+    "pais": "Argentina"
+}
+```
+
+**Parámetros:**
+
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `nombre` | string | Sí | Nombre del usuario |
+| `apellido` | string | Sí | Apallido del usuario |
+| `email` | string | Sí | Identificador del usuario como único |
+| `password` | string | No | password necesita confirmación |
+| `telefono` | string | No | telefono opcional |
+| `direccion` | string | No | direccion opcional |
+| `ciudad` | string | No | ciudad opcional |
+| `codigo_postal` | string | No | código postal opcional |
+| `pais` | string | No | Por defecto es argentina |
+| `isadmin` | string | No | Por defecto es false si no se envía el campo |
+
+
+El `email` debe ser único dentro de la tabla `usuarios`.
+
+**Respuesta exitosa:**
+
+```json
+{
+    "nombre": "Pedro",
+    "apellido": "Martinez",
+    "email": "pedro@example.com",
+    "telefono": "2954929292",
+    "direccion": "Calle Falsa 124",
+    "ciudad": "Puelen",
+    "codigo_postal": "C8201",
+    "pais": "Argentina",
+    "updated_at": "2026-09-06T22:45:14.000000Z",
+    "created_at": "2026-09-06T22:45:14.000000Z",
+    "id": 15
+}
+```
+**Respuesta exitosa:** ![201 Created](https://img.shields.io/badge/201-Created-green)
+
+### Actualizar un usuario
+
+```http
+PUT /api/v1/usuarios/1
+```
+
+**Parámetro de URL:**
+
+
+**Body JSON:**
+
+```json
+{
+    "nombre": "Pedro Modificado",
+    "apellido": "Martinez Modificado",
+    "email": "pedromodificado@example.com",
+    "telefono": "2954-929292",
+    "direccion": "Calle Falsa 125",
+    "ciudad": "25 de Mayo",
+    "codigo_postal": "C8202",
+}
+
+```
+**Parámetros:**
+
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `nombre` | string | No | Nombre del usuario opcional |
+| `apellido` | string | No | Apellido del usuario opcional |
+| `email` | string | Identifica el usuario como único|
+| `telefono` | string | No | telefono opcional |
+| `direccion` | string | No | direccion opcional |
+| `ciudad` | string | No | ciudad opcional |
+| `codigo_postal` | string | No | código postal opcional |
+| `pais` | string | No | Por defecto es argentina |
+| `isadmin` | string | No | Por defecto es false si no se envía el campo |
+
+
+Si no existe:
+
+```json
+{
+    "message": "Recurso no encontrado",
+    "status": 404,
+    "errors": {
+        "error": "No query results for model [App\\Models\\Usuario] 122"
+    }
+}
+```
+**Respuesta no exitosa:**  ![404 Not Found](https://img.shields.io/badge/404-Not_Found-red)
+
+Si existe:
+
+```json
+{
+    "id": 15,
+    "nombre": "Pedro Modificado",
+    "apellido": "Martinez Modificado",
+    "email": "pedromodificado@example.com",
+    "email_verified_at": null,
+    "isadmin": false,
+    "created_at": "2026-09-06T22:45:14.000000Z",
+    "updated_at": "2026-09-06T23:10:45.000000Z",
+    "telefono": "2954-929292",
+    "direccion": "Calle Falsa 125",
+    "ciudad": "25 de Mayo",
+    "codigo_postal": "C8202",
+    "pais": "Argentina"
+}
+```
+**Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green)
+
+### Eliminar un usuario
+
+```http
+DELETE /api/v1/usuarios/{id}
+```
+
+**Parámetro:**
+
+| Parámetro | Tipo | Descripción |
+|---|---|---|
+| `id` | integer | Identificador de la usuario |
+
+
+**Respuesta exitosa:** ![204 No Content](https://img.shields.io/badge/204-No_Content-green)
+
+Si no existe:
+
+```json
+{
+    "message": "Recurso no encontrado",
+    "status": 404,
+    "errors": {
+        "error": "No query results for model [App\\Models\\Categoria] 122"
+    }
+}
+```
+
+**Respuesta no exitosa:** ![404 Not Found](https://img.shields.io/badge/404-Not_Found-red)
 
 ---
 
@@ -814,19 +1297,19 @@ Devuelve el producto creado en formato JSON.
 ### Actualizar un producto
 
 ```http
-PUT {{url_base}}/productos/{producto}
+PUT /api/v1/productos/{id}
 ```
 
 **Parámetro:**
 
 | Parámetro | Tipo | Descripción |
 |---|---|---|
-| `producto` | integer | Identificador del producto |
+| `id` | integer | Identificador del producto |
 
 Ejemplo:
 
 ```http
-PUT {{url_base}}/productos/1
+PUT /api/v1/productos/1
 ```
 
 **Body JSON:**
@@ -847,7 +1330,7 @@ Devuelve el producto actualizado.
 ### Eliminar un producto
 
 ```http
-DELETE {{url_base}}/productos/{id}
+DELETE /api/v1/productos/{id}
 ```
 
 **Parámetro:**
@@ -856,23 +1339,29 @@ DELETE {{url_base}}/productos/{id}
 |---|---|---|
 | `id` | integer | Identificador del producto |
 
-**Respuesta exitosa:**
-
-```json
-{
-    "message": "Producto eliminado"
-}
+```http
+DELETE /api/v1/productos/1
 ```
+
+**Respuesta exitosa:** ![204 No Content](https://img.shields.io/badge/204-No_Content-green)
+
 
 Si no existe:
+```http
+DELETE /api/v1/productos/111
+```
 
 ```json
 {
-    "message": "Producto no encontrado"
+    "message": "Recurso no encontrado",
+    "status": 404,
+    "errors": {
+        "error": "No query results for model [App\\Models\\Producto] 111"
+    }
 }
 ```
 
-Código HTTP: `404 Not Found`.
+**Respuesta no exitosa:** ![404 Not Found](https://img.shields.io/badge/404-Not_Found-red)
 
 ---
 
@@ -889,7 +1378,7 @@ El carrito se compone de items, donde cada item representa un producto con una c
 
 
 ```http
-GET {{url_base}}/carritos/
+GET /api/v1/carrito/
 ```
 
 Si no hay usuario logueado:
@@ -911,36 +1400,38 @@ Si hay usuario logueado y no tiene carrito:
     "error": "El usuario no tiene un carrito activo."
 }
 ```
-**Respuesta no exitosa:** ![422 Unprocessable content](https://img.shields.io/badge/422-Unprocessable_content-red)
-
-
+**Respuesta no exitosa:** ![404 Not Found](https://img.shields.io/badge/404-Not_found-red)
 
 
 Si tiene carrito:
 ```json
 {
-    "usuario_id": 2,
-    "estado": "activo",
     "items": [
         {
-            "id": 11,
-            "producto_id": 1,
-            "producto_nombre": "Producto1",
-            "cantidad": 1,
-            "precio_unitario": "19.99",
-            "subtotal": 19.99
+            "id": 16,
+            "producto_id": 5,
+            "producto_nombre": "Producto5",
+            "cantidad": 2,
+            "precio_unitario": "29.99",
+            "subtotal": 59.98
         },
         {
-            "id": 12,
-            "producto_id": 2,
-            "producto_nombre": "Producto2",
-            "cantidad": 1,
-            "precio_unitario": "19.99",
-            "subtotal": 19.99
+            "id": 17,
+            "producto_id": 6,
+            "producto_nombre": "Producto6",
+            "cantidad": 2,
+            "precio_unitario": "9.99",
+            "subtotal": 19.98
         }
     ],
-    "total_items": 2,
-    "total": 39.98
+    "resumen": {
+        "cantidad_productos": 2,
+        "cantidad_unidades": 4,
+        "subtotal": 79.96,
+        "impuestos": 16.79,
+        "envio": 5000,
+        "total": 5096.75
+    }
 }
 ```
 **Respuesta exitosa:** ![200 OK](https://img.shields.io/badge/200-OK-green).
@@ -949,7 +1440,7 @@ Muestra listado de productos, con la cantidad de cada uno, y un resumen con el t
 
 ### Checkout de carrito de usuario 🛒 
 ```http
-GET {{url_base}}/carrito/checkout
+GET /api/v1/carrito/checkout
 ```
 Si no hay usuario logueado:
 
@@ -974,10 +1465,10 @@ Si no hay usuario logueado:
 {
     "message": "Checkout realizado con éxito.",
     "resumen": {
-        "SUBTOTAL": 39.98,
-        "IMPUESTO": 8.4,
-        "GASTOS_DE_ENVIO": 5000,
-        "TOTAL": 5048.38
+        "subtotal": 79.96,
+        "impuestos": 16.79,
+        "envio": 5000,
+        "total": 5096.75
     }
 }
 ```
