@@ -26,10 +26,10 @@ class UpdateUsuarioRequest extends FormRequest
         return [
             'nombre' => ['sometimes', 'string', 'max:255'],
             'apellido' => ['sometimes', 'string', 'max:255'],
-            'email' => [
-                'sometimes',
-                'string',
-                'email',
+            'email' => [       // permite que un usuario conserve su propio 
+                'sometimes',   // email al actualizar otros datos. Sin ignore(),
+                'string',      // Laravel encontraría su email existente y 
+                'email',       // rechazaría la actualización como duplicado.
                 'max:255',
                 Rule::unique('usuarios', 'email')->ignore(auth('api')->id()),
             ],
